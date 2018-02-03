@@ -1,2 +1,1 @@
-# tootbot
-Python script for mirroring Reddit posts to Twitter and Mastodon
+This branch contains the `current-version.txt` file, which Tootbot checks to determine the latest version.
