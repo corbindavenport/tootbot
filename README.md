@@ -11,6 +11,8 @@ This is a Python bot that looks up posts from specified subreddits and automatic
 * Can monitor multiple subreddits at once
 * Fully open-source and runs locally, so you don't have to give an external service full access to your social media account(s)
 
+Tootbot uses the [tweepy](https://github.com/tweepy/tweepy), [PRAW](https://praw.readthedocs.io/en/latest/), [py-gfycat](https://github.com/ankeshanand/py-gfycat), [imgurpython](https://github.com/Imgur/imgurpython), [Pillow](https://github.com/python-pillow/Pillow), and [Mastodon.py](https://github.com/halcy/Mastodon.py) libraries.
+
 ## Disclaimer
 
 The developers of Tootbot hold no liability for what you do with this script or what happens to you by using this script. Abusing this script *can* get you banned from Twitter, so make sure to read up on proper usage of the Twitter API.
