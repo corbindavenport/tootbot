@@ -300,13 +300,7 @@ CONSUMER_KEY = config['Twitter']['ConsumerKey']
 CONSUMER_SECRET = config['Twitter']['ConsumerSecret']
 # Mastodon info
 MASTODON_INSTANCE_DOMAIN = config['Mastodon']['InstanceDomain']
-# Reddit API keys
-#REDDIT_AGENT = config['Reddit']['Agent']
-#REDDIT_CLIENT_SECRET = config['Reddit']['ClientSecret']
-# Imgur API keys
-IMGUR_CLIENT = config['Imgur']['ClientID']
-IMGUR_CLIENT_SECRET = config['Imgur']['ClientSecret']
-# Setup Reddit access if it hasn't been done already
+# Setup and verify Reddit access
 if not os.path.exists('reddit.secret'):
 	print ('[WARN] API keys for Reddit not found. Please enter them below (see wiki if you need help).')
 	REDDIT_AGENT = input("[ .. ] Enter Reddit agent: ")
@@ -329,10 +323,39 @@ if not os.path.exists('reddit.secret'):
 		print ('[EROR] Tootbot cannot continue, now shutting down')
 		exit()
 else:
+	# Read API keys from secret file
 	reddit_config = configparser.ConfigParser()
 	reddit_config.read('reddit.secret')
 	REDDIT_AGENT = reddit_config['Reddit']['Agent']
 	REDDIT_CLIENT_SECRET = reddit_config['Reddit']['ClientSecret']
+# Setup and verify Imgur access
+if not os.path.exists('imgur.secret'):
+	print ('[WARN] API keys for Imgur not found. Please enter them below (see wiki if you need help).')
+	IMGUR_CLIENT = input("[ .. ] Enter Imgur client ID: ")
+	IMGUR_CLIENT_SECRET = input("[ .. ] Enter Imgur client secret: ")
+	# Make sure authentication is working
+	try:
+		imgur_client = ImgurClient(IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
+		test_gallery = imgur_client.get_album('dqOyj')
+		# It worked, so save the keys to a file
+		imgur_config = configparser.ConfigParser()
+		imgur_config['Imgur'] = {
+			'ClientID': IMGUR_CLIENT,
+			'ClientSecret': IMGUR_CLIENT_SECRET
+		}
+		with open('imgur.secret', 'w') as f:
+			imgur_config.write(f)
+		f.close()
+	except BaseException as e:
+		print ('[EROR] Error while logging into Imgur:', str(e))
+		print ('[EROR] Tootbot cannot continue, now shutting down')
+		exit()
+else:
+	# Read API keys from secret file
+	imgur_config = configparser.ConfigParser()
+	imgur_config.read('imgur.secret')
+	IMGUR_CLIENT = imgur_config['Imgur']['ClientID']
+	IMGUR_CLIENT_SECRET = imgur_config['Imgur']['ClientSecret']
 # Log into Twitter if enabled in settings
 if ACCESS_TOKEN:
 	try:
