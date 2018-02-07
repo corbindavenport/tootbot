@@ -1,4 +1,4 @@
 media/
 cache.csv
-mastodon.secret
+*.secret
 .vscode/

@@ -301,11 +301,38 @@ CONSUMER_SECRET = config['Twitter']['ConsumerSecret']
 # Mastodon info
 MASTODON_INSTANCE_DOMAIN = config['Mastodon']['InstanceDomain']
 # Reddit API keys
-REDDIT_AGENT = config['Reddit']['Agent']
-REDDIT_CLIENT_SECRET = config['Reddit']['ClientSecret']
+#REDDIT_AGENT = config['Reddit']['Agent']
+#REDDIT_CLIENT_SECRET = config['Reddit']['ClientSecret']
 # Imgur API keys
 IMGUR_CLIENT = config['Imgur']['ClientID']
 IMGUR_CLIENT_SECRET = config['Imgur']['ClientSecret']
+# Setup Reddit access if it hasn't been done already
+if not os.path.exists('reddit.secret'):
+	print ('[WARN] API keys for Reddit not found. Please enter them below (see wiki if you need help).')
+	REDDIT_AGENT = input("[ .. ] Enter Reddit agent: ")
+	REDDIT_CLIENT_SECRET = input("[ .. ] Enter Reddit client secret: ")
+	# Make sure authentication is working
+	try:
+		reddit_client = praw.Reddit(user_agent='Tootbot', client_id=REDDIT_AGENT, client_secret=REDDIT_CLIENT_SECRET)
+		test = reddit_client.subreddit('announcements')
+		# It worked, so save the keys to a file
+		reddit_config = configparser.ConfigParser()
+		reddit_config['Reddit'] = {
+			'Agent': REDDIT_AGENT,
+			'ClientSecret': REDDIT_CLIENT_SECRET
+		}
+		with open('reddit.secret', 'w') as f:
+			reddit_config.write(f)
+		f.close()
+	except BaseException as e:
+		print ('[EROR] Error while logging into Reddit:', str(e))
+		print ('[EROR] Tootbot cannot continue, now shutting down')
+		exit()
+else:
+	reddit_config = configparser.ConfigParser()
+	reddit_config.read('reddit.secret')
+	REDDIT_AGENT = reddit_config['Reddit']['Agent']
+	REDDIT_CLIENT_SECRET = reddit_config['Reddit']['ClientSecret']
 # Log into Twitter if enabled in settings
 if ACCESS_TOKEN:
 	try:
