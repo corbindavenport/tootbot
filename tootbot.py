@@ -285,7 +285,7 @@ except BaseException as e:
 	sys.exit()
 # General settings
 CACHE_CSV = config['BotSettings']['CacheFile']
-DELAY_BETWEEN_TWEETS = int(config['BotSettings']['DelayBetweenTweets'])
+DELAY_BETWEEN_TWEETS = int(config['BotSettings']['DelayBetweenPosts'])
 POST_LIMIT = int(config['BotSettings']['PostLimit'])
 SUBREDDIT_TO_MONITOR = config['BotSettings']['SubredditToMonitor']
 NSFW_POSTS_ALLOWED = bool(distutils.util.strtobool(config['BotSettings']['NSFWPostsAllowed']))
