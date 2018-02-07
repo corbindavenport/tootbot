@@ -231,16 +231,16 @@ def make_post(post_dict):
 							media = mastodon.media_post(file_path, mime_type=None)
 							# Add NSFW warning for Reddit posts marked as NSFW
 							if (post_dict[post][4] == True):
-								toot = mastodon.status_post(post_dict[post][1],media_ids=[media],visibility=MASTODON_POST_VISIBILITY,spoiler_text='NSFW')
+								toot = mastodon.status_post(post_dict[post][1],media_ids=[media],spoiler_text='NSFW')
 							else:	
-								toot = mastodon.status_post(post_dict[post][1],media_ids=[media],visibility=MASTODON_POST_VISIBILITY)
+								toot = mastodon.status_post(post_dict[post][1],media_ids=[media])
 						else:
 							print ('[ OK ] Posting this on Mastodon account:', post_dict[post][1])
 							# Add NSFW warning for Reddit posts marked as NSFW
 							if (post_dict[post][4] == True):
-								toot = mastodon.status_post(post_dict[post][1],visibility=MASTODON_POST_VISIBILITY,spoiler_text='NSFW')
+								toot = mastodon.status_post(post_dict[post][1],spoiler_text='NSFW')
 							else:	
-								toot = mastodon.status_post(post_dict[post][1],visibility=MASTODON_POST_VISIBILITY)
+								toot = mastodon.status_post(post_dict[post][1])
 						# Log the toot
 						log_post(post_id, toot["url"])
 					except BaseException as e:
@@ -300,7 +300,6 @@ CONSUMER_KEY = config['Twitter']['ConsumerKey']
 CONSUMER_SECRET = config['Twitter']['ConsumerSecret']
 # Mastodon info
 MASTODON_INSTANCE_DOMAIN = config['Mastodon']['InstanceDomain']
-MASTODON_POST_VISIBILITY = config['Mastodon']['PostVisibility']
 # Reddit API keys
 REDDIT_AGENT = config['Reddit']['Agent']
 REDDIT_CLIENT_SECRET = config['Reddit']['ClientSecret']
