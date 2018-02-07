@@ -164,7 +164,7 @@ def tweet_creator(subreddit_info):
 			else:
 				mastodon_post = submission.title[:max_title_length] + '... ' + submission.shortlink
 			# Create dict
-			post_dict[submission.id] = [twitter_post,mastodon_post,submission.url, submission.id]
+			post_dict[submission.id] = [twitter_post,mastodon_post,submission.url, submission.id, submission.over_18]
 	return post_dict
 
 def setup_connection_reddit(subreddit):
@@ -229,12 +229,20 @@ def make_post(post_dict):
 						if (file_path):
 							print ('[ OK ] Posting this on Mastodon account with media attachment:', post_dict[post][1])
 							media = mastodon.media_post(file_path, mime_type=None)
-							toot = mastodon.status_post(post_dict[post][1],None,[media])
+							# Add NSFW warning for Reddit posts marked as NSFW
+							if (post_dict[post][4] == True):
+								toot = mastodon.status_post(post_dict[post][1],media_ids=[media],visibility=MASTODON_POST_VISIBILITY,spoiler_text='NSFW')
+							else:	
+								toot = mastodon.status_post(post_dict[post][1],media_ids=[media],visibility=MASTODON_POST_VISIBILITY)
 						else:
 							print ('[ OK ] Posting this on Mastodon account:', post_dict[post][1])
-							toot = mastodon.toot(post_dict[post][1])
+							# Add NSFW warning for Reddit posts marked as NSFW
+							if (post_dict[post][4] == True):
+								toot = mastodon.status_post(post_dict[post][1],visibility=MASTODON_POST_VISIBILITY,spoiler_text='NSFW')
+							else:	
+								toot = mastodon.status_post(post_dict[post][1],visibility=MASTODON_POST_VISIBILITY)
 						# Log the toot
-						log_post(post_id, toot.url)
+						log_post(post_id, toot["url"])
 					except BaseException as e:
 						print ('[EROR] Error while posting toot:', str(e))
 						# Log the post anyways
@@ -292,6 +300,7 @@ CONSUMER_KEY = config['Twitter']['ConsumerKey']
 CONSUMER_SECRET = config['Twitter']['ConsumerSecret']
 # Mastodon info
 MASTODON_INSTANCE_DOMAIN = config['Mastodon']['InstanceDomain']
+MASTODON_POST_VISIBILITY = config['Mastodon']['PostVisibility']
 # Reddit API keys
 REDDIT_AGENT = config['Reddit']['Agent']
 REDDIT_CLIENT_SECRET = config['Reddit']['ClientSecret']
@@ -335,7 +344,7 @@ if MASTODON_INSTANCE_DOMAIN:
 				to_file = 'mastodon.secret'
 			)
 			# Make sure authentication is working
-			username = mastodon.account_verify_credentials().username
+			username = mastodon.account_verify_credentials()['username']
 			print ('[ OK ] Sucessfully authenticated on ' + MASTODON_INSTANCE_DOMAIN + ' as @' + username + ', login information now stored in mastodon.secret file')
 		except BaseException as e:
 			print ('[EROR] Error while logging into Mastodon:', str(e))
@@ -349,7 +358,7 @@ if MASTODON_INSTANCE_DOMAIN:
 				api_base_url = 'https://' + MASTODON_INSTANCE_DOMAIN
 			)
 			# Make sure authentication is working
-			username = mastodon.account_verify_credentials().username
+			username = mastodon.account_verify_credentials()['username']
 			print ('[ OK ] Sucessfully authenticated on ' + MASTODON_INSTANCE_DOMAIN + ' as @' + username)
 		except BaseException as e:
 			print ('[EROR] Error while logging into Mastodon:', str(e))
@@ -363,7 +372,7 @@ if (os.name == 'nt'):
 			# Get Twitter username
 			twitter_username = twitter.me().screen_name
 			# Get Mastodon username
-			masto_username = mastodon.account_verify_credentials().username
+			masto_username = mastodon.account_verify_credentials()['username']
 			# Set window title
 			title = twitter_username + '@twitter.com and ' + masto_username + '@' + MASTODON_INSTANCE_DOMAIN + ' - Tootbot'
 		elif ACCESS_TOKEN:
@@ -373,7 +382,7 @@ if (os.name == 'nt'):
 			title = '@' + twitter_username + ' - Tootbot'
 		elif MASTODON_INSTANCE_DOMAIN:
 			# Set title with just Mastodon username
-			masto_username = mastodon.account_verify_credentials().username
+			masto_username = mastodon.account_verify_credentials()['username']
 			# Set window title
 			title = masto_username + '@' + MASTODON_INSTANCE_DOMAIN + ' - Tootbot'
 	except :
