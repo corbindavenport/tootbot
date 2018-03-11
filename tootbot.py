@@ -306,8 +306,8 @@ if MASTODON_INSTANCE_DOMAIN:
 				to_file = 'mastodon.secret'
 			)
 			# Make sure authentication is working
-			username = mastodon.account_verify_credentials()['username']
-			print ('[ OK ] Sucessfully authenticated on ' + MASTODON_INSTANCE_DOMAIN + ' as @' + username + ', login information now stored in mastodon.secret file')
+			masto_username = mastodon.account_verify_credentials()['username']
+			print ('[ OK ] Sucessfully authenticated on ' + MASTODON_INSTANCE_DOMAIN + ' as @' + masto_username + ', login information now stored in mastodon.secret file')
 		except BaseException as e:
 			print ('[EROR] Error while logging into Mastodon:', str(e))
 			print ('[EROR] Tootbot cannot continue, now shutting down')
@@ -328,28 +328,22 @@ if MASTODON_INSTANCE_DOMAIN:
 			exit()
 # Set the command line window title on Windows
 if (os.name == 'nt'):
-	try:
-		if POST_TO_TWITTER and MASTODON_INSTANCE_DOMAIN:
+  try:
+    if POST_TO_TWITTER and MASTODON_INSTANCE_DOMAIN:
 			# Set title with both Twitter and Mastodon usernames
-			# Get Twitter username
-			twitter_username = twitter.me().screen_name
-			# Get Mastodon username
-			masto_username = mastodon.account_verify_credentials()['username']
-			# Set window title
-			title = twitter_username + '@twitter.com and ' + masto_username + '@' + MASTODON_INSTANCE_DOMAIN + ' - Tootbot'
-		elif POST_TO_TWITTER:
-			# Set title with just Twitter username
-			twitter_username = twitter.me().screen_name
-			# Set window title
-			title = '@' + twitter_username + ' - Tootbot'
-		elif MASTODON_INSTANCE_DOMAIN:
+      twitter_username = twitter.me().screen_name
+      masto_username = mastodon.account_verify_credentials()['username']
+      os.system('title ' + twitter_username + '@twitter.com and ' + masto_username + '@' + MASTODON_INSTANCE_DOMAIN + ' - Tootbot')
+    elif POST_TO_TWITTER:
+      # Set title with just Twitter username
+      twitter_username = twitter.me().screen_name
+      os.system('title ' + '@' + twitter_username + ' - Tootbot')
+    elif MASTODON_INSTANCE_DOMAIN:
 			# Set title with just Mastodon username
-			masto_username = mastodon.account_verify_credentials()['username']
-			# Set window title
-			title = masto_username + '@' + MASTODON_INSTANCE_DOMAIN + ' - Tootbot'
-	except :
-		title = 'Tootbot'
-		os.system('title ' + title)
+      masto_username = mastodon.account_verify_credentials()['username']
+      os.system('title ' + masto_username + '@' + MASTODON_INSTANCE_DOMAIN + ' - Tootbot')
+  except:
+    os.system('title Tootbot')
 # Run the main script
 while True:
 	# Make sure logging file and media directory exists
