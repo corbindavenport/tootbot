@@ -7,6 +7,7 @@ import csv
 import configparser
 import urllib.parse
 import sys
+from imgurpython import ImgurClient
 from glob import glob
 import distutils.core
 import itertools
@@ -34,12 +35,12 @@ def tweet_creator(subreddit_info):
 			if len(submission.title) < twitter_max_title_length:
 				twitter_post = submission.title + ' ' + submission.shortlink
 			else:
-				twitter_post = submission.title[:max_title_length] + '... ' + submission.shortlink
+				twitter_post = submission.title[:twitter_max_title_length] + '... ' + submission.shortlink
 			# Create contents of the Mastodon post
 			if len(submission.title) < mastodon_max_title_length:
 				mastodon_post = submission.title + ' ' + submission.shortlink
 			else:
-				mastodon_post = submission.title[:max_title_length] + '... ' + submission.shortlink
+				mastodon_post = submission.title[:mastodon_max_title_length] + '... ' + submission.shortlink
 			# Create dict
 			post_dict[submission.id] = [twitter_post,mastodon_post,submission.url, submission.id, submission.over_18]
 	return post_dict
