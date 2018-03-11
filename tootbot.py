@@ -194,7 +194,7 @@ def log_post(id, post_url):
 
 def make_post(post_dict):
 	auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-	auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_secret)
+	auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 	api = tweepy.API(auth)
 	for post in post_dict:
 		# Grab post details from dictionary
@@ -207,7 +207,7 @@ def make_post(post_dict):
 				if ACCESS_TOKEN:
 					try:
 						auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-						auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_secret)
+						auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 						twitter = tweepy.API(auth)
 						# Post the tweet
 						if (file_path):
@@ -293,18 +293,16 @@ SELF_POSTS_ALLOWED = bool(distutils.util.strtobool(config['BotSettings']['SelfPo
 # Settings related to media attachments
 IMAGE_DIR = config['MediaSettings']['MediaFolder']
 MEDIA_POSTS_ONLY = bool(distutils.util.strtobool(config['MediaSettings']['MediaPostsOnly']))
-# Twitter API keys
-ACCESS_TOKEN = config['Twitter']['AccessToken']
-ACCESS_TOKEN_secret = config['Twitter']['AccessTokenSecret']
-CONSUMER_KEY = config['Twitter']['ConsumerKey']
-CONSUMER_SECRET = config['Twitter']['ConsumerSecret']
+# Twitter info
+POST_TO_TWITTER = bool(distutils.util.strtobool(config['Twitter']['PostToTwitter']))
 # Mastodon info
 MASTODON_INSTANCE_DOMAIN = config['Mastodon']['InstanceDomain']
 # Setup and verify Reddit access
 if not os.path.exists('reddit.secret'):
 	print ('[WARN] API keys for Reddit not found. Please enter them below (see wiki if you need help).')
-	REDDIT_AGENT = input("[ .. ] Enter Reddit agent: ")
-	REDDIT_CLIENT_SECRET = input("[ .. ] Enter Reddit client secret: ")
+	# Whitespaces are stripped from input: https://stackoverflow.com/a/3739939
+	REDDIT_AGENT = ''.join(input("[ .. ] Enter Reddit agent: ").split())
+	REDDIT_CLIENT_SECRET = ''.join(input("[ .. ] Enter Reddit client secret: ").split())
 	# Make sure authentication is working
 	try:
 		reddit_client = praw.Reddit(user_agent='Tootbot', client_id=REDDIT_AGENT, client_secret=REDDIT_CLIENT_SECRET)
@@ -331,8 +329,9 @@ else:
 # Setup and verify Imgur access
 if not os.path.exists('imgur.secret'):
 	print ('[WARN] API keys for Imgur not found. Please enter them below (see wiki if you need help).')
-	IMGUR_CLIENT = input("[ .. ] Enter Imgur client ID: ")
-	IMGUR_CLIENT_SECRET = input("[ .. ] Enter Imgur client secret: ")
+	# Whitespaces are stripped from input: https://stackoverflow.com/a/3739939
+	IMGUR_CLIENT = ''.join(input("[ .. ] Enter Imgur client ID: ").split())
+	IMGUR_CLIENT_SECRET = ''.join(input("[ .. ] Enter Imgur client secret: ").split())
 	# Make sure authentication is working
 	try:
 		imgur_client = ImgurClient(IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
@@ -357,22 +356,63 @@ else:
 	IMGUR_CLIENT = imgur_config['Imgur']['ClientID']
 	IMGUR_CLIENT_SECRET = imgur_config['Imgur']['ClientSecret']
 # Log into Twitter if enabled in settings
-if ACCESS_TOKEN:
-	try:
-		auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-		auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_secret)
-		twitter = tweepy.API(auth)
-		# Make sure authentication is working
-		twitter_username = twitter.me().screen_name
-		print ('[ OK ] Sucessfully authenticated on Twitter as @' + twitter_username)
-	except BaseException as e:
-		print ('[EROR] Error while logging into Twitter:', str(e))
-		print ('[EROR] Tootbot cannot continue, now shutting down')
-		exit()
+if POST_TO_TWITTER is True:
+	if os.path.exists('twitter.secret'):
+		# Read API keys from secret file
+		twitter_config = configparser.ConfigParser()
+		twitter_config.read('twitter.secret')
+		ACCESS_TOKEN = twitter_config['Twitter']['AccessToken']
+		ACCESS_TOKEN_SECRET = twitter_config['Twitter']['AccessTokenSecret']
+		CONSUMER_KEY = twitter_config['Twitter']['ConsumerKey']
+		CONSUMER_SECRET = twitter_config['Twitter']['ConsumerKeySecret']
+		try:
+			# Make sure authentication is working
+			auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+			auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+			twitter = tweepy.API(auth)
+			twitter_username = twitter.me().screen_name
+			print ('[ OK ] Sucessfully authenticated on Twitter as @' + twitter_username)
+		except BaseException as e:
+			print ('[EROR] Error while logging into Twitter:', str(e))
+			print ('[EROR] Tootbot cannot continue, now shutting down')
+			exit()
+	else:
+		# If the secret file doesn't exist, it means the setup process hasn't happened yet
+		print ('[WARN] API keys for Twitter not found. Please enter them below (see wiki if you need help).')
+		# Whitespaces are stripped from input: https://stackoverflow.com/a/3739939
+		ACCESS_TOKEN = ''.join(input('[ .. ] Enter access token for Twitter account: ').split())
+		ACCESS_TOKEN_SECRET = ''.join(input('[ .. ] Enter access token secret for Twitter account: ').split())
+		CONSUMER_KEY = ''.join(input('[ .. ] Enter consumer key for Twitter account: ').split())
+		CONSUMER_SECRET = ''.join(input('[ .. ] Enter consumer secret for Twitter account: ').split())
+		print (ACCESS_TOKEN, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET)
+		print ('[ OK ] Attempting to log in to Twitter...')
+		try:
+			# Make sure authentication is working
+			auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+			auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+			twitter = tweepy.API(auth)
+			twitter_username = twitter.me().screen_name
+			print ('[ OK ] Sucessfully authenticated on Twitter as @' + twitter_username)
+			# It worked, so save the keys to a file
+			twitter_config = configparser.ConfigParser()
+			twitter_config['Twitter'] = {
+				'AccessToken': ACCESS_TOKEN,
+				'AccessTokenSecret': ACCESS_TOKEN_SECRET,
+				'ConsumerKey': CONSUMER_KEY,
+				'ConsumerSecret': CONSUMER_SECRET
+			}
+			with open('twitter.secret', 'w') as f:
+				twitter_config.write(f)
+			f.close()
+		except BaseException as e:
+			print ('[EROR] Error while logging into Twitter:', str(e))
+			print ('[EROR] Tootbot cannot continue, now shutting down')
+			exit()
 # Log into Mastodon if enabled in settings
 if MASTODON_INSTANCE_DOMAIN:
 	if not os.path.exists('mastodon.secret'):
 		# If the secret file doesn't exist, it means the setup process hasn't happened yet
+		print ('[WARN] API keys for Mastodon not found. Please enter them below (see wiki if you need help).')
 		MASTODON_USERNAME = input("[ .. ] Enter email address for Mastodon account: ")
 		MASTODON_PASSWORD = input("[ .. ] Enter password for Mastodon account: ")
 		print ('[ OK ] Generating login key for Mastodon...')
