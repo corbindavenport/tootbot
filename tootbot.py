@@ -1,140 +1,17 @@
 import praw
 import json
-import requests
 import tweepy
 import time
 import os
 import csv
-import re
 import configparser
 import urllib.parse
 import sys
 from glob import glob
-from gfycat.client import GfycatClient
-from imgurpython import ImgurClient
 import distutils.core
 import itertools
-from PIL import Image
-import urllib.request
 from mastodon import Mastodon
-
-# Location of the configuration file
-CONFIG_FILE = 'config.ini'
-
-def save_file(img_url, file_path):
-	resp = requests.get(img_url, stream=True)
-	if resp.status_code == 200:
-		with open(file_path, 'wb') as image_file:
-			for chunk in resp:
-				image_file.write(chunk)
-		# Return the path of the image, which is always the same since we just overwrite images
-		image_file.close()
-		return file_path
-	else:
-		print('[EROR] File failed to download. Status code: ' + str(resp.status_code))
-		return
-
-def get_media(img_url, post_id):
-	if any(s in img_url for s in ('i.redd.it', 'i.reddituploads.com')):
-		file_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
-		file_extension = os.path.splitext(img_url)[-1].lower()
-		# Fix for issue with i.reddituploads.com links not having a file extension in the URL
-		if not file_extension:
-			file_extension += '.jpg'
-			file_name += '.jpg'
-			img_url += '.jpg'
-		# Grab the GIF versions of .GIFV links
-		# When Tweepy adds support for video uploads, we can use grab the MP4 versions
-		if (file_extension == '.gifv'):
-			file_extension = file_extension.replace('.gifv', '.gif')
-			file_name = file_name.replace('.gifv', '.gif')
-			img_url = img_url.replace('.gifv', '.gif')
-		# Download the file
-		file_path = IMAGE_DIR + '/' + file_name
-		print('[ OK ] Downloading file at URL ' + img_url + ' to ' + file_path + ', file type identified as ' + file_extension)
-		img = save_file(img_url, file_path)
-		return img
-	elif ('imgur.com' in img_url): # Imgur
-		try:
-			client = ImgurClient(IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
-		except BaseException as e:
-			print ('[EROR] Error while authenticating with Imgur:', str(e))	
-			return
-		# Working demo of regex: https://regex101.com/r/G29uGl/2
-		regex = r"(?:.*)imgur\.com(?:\/gallery\/|\/a\/|\/)(.*?)(?:\/.*|\.|$)"
-		m = re.search(regex, img_url, flags=0)
-		if m:
-			# Get the Imgur image/gallery ID
-			id = m.group(1)
-			if any(s in img_url for s in ('/a/', '/gallery/')): # Gallery links
-				images = client.get_album_images(id)
-				# Only the first image in a gallery is used
-				imgur_url = images[0].link
-			else: # Single image
-				imgur_url = client.get_image(id).link
-			# If the URL is a GIFV link, change it to a GIF
-			file_extension = os.path.splitext(imgur_url)[-1].lower()
-			if (file_extension == '.gifv'):
-				file_extension = file_extension.replace('.gifv', '.gif')
-				img_url = imgur_url.replace('.gifv', '.gif')
-			# Download the image
-			file_path = IMAGE_DIR + '/' + id + file_extension
-			print('[ OK ] Downloading Imgur image at URL ' + imgur_url + ' to ' + file_path)
-			imgur_file = save_file(imgur_url, file_path)
-			# Imgur will sometimes return a single-frame thumbnail instead of a GIF, so we need to check for this
-			if (file_extension == '.gif'):
-				# Open the file using the Pillow library
-				img = Image.open(imgur_file)
-				# Get the MIME type
-				mime = Image.MIME[img.format]
-				if (mime == 'image/gif'):
-					# Image is indeed a GIF, so it can be posted
-					img.close()
-					return imgur_file
-				else:
-					# Image is not actually a GIF, so don't post it
-					print('[EROR] Imgur has not processed a GIF version of this link, so it can not be posted')
-					img.close()
-					# Delete the image
-					try:
-						os.remove(imgur_file)
-					except BaseException as e:
-						print ('[EROR] Error while deleting media file:', str(e))
-					return
-			else:
-				return imgur_file
-		else:
-			print('[EROR] Could not identify Imgur image/gallery ID in this URL:', img_url)
-			return
-	elif ('gfycat.com' in img_url): # Gfycat
-		gfycat_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
-		client = GfycatClient()
-		gfycat_info = client.query_gfy(gfycat_name)
-		# Download the 2MB version because Tweepy has a 3MB upload limit for GIFs
-		gfycat_url = gfycat_info['gfyItem']['max2mbGif']
-		file_path = IMAGE_DIR + '/' + gfycat_name + '.gif'
-		print('[ OK ] Downloading Gfycat at URL ' + gfycat_url + ' to ' + file_path)
-		gfycat_file = save_file(gfycat_url, file_path)
-		return gfycat_file
-	elif ('giphy.com' in img_url): # Giphy
-		# Working demo of regex: https://regex101.com/r/o8m1kA/2
-		regex = r"https?://((?:.*)giphy\.com/media/|giphy.com/gifs/|i.giphy.com/)(.*-)?(\w+)(/|\n)"
-		m = re.search(regex, img_url, flags=0)
-		if m:
-			# Get the Giphy ID
-			id = m.group(3)
-			# Download the 2MB version because Tweepy has a 3MB upload limit for GIFs
-			giphy_url = 'https://media.giphy.com/media/' + id + '/giphy-downsized.gif'
-			file_path = IMAGE_DIR + '/' + id + '-downsized.gif'
-			print('[ OK ] Downloading Giphy at URL ' + giphy_url + ' to ' + file_path)
-			giphy_file = save_file(giphy_url, file_path)
-			return giphy_file
-		else:
-			print('[EROR] Could not identify Giphy ID in this URL:', img_url)
-			return
-	else:
-		# Silently fail when there isn't a media attachment to download
-		return
+from getmedia import get_media
 
 def tweet_creator(subreddit_info):
 	post_dict = {}
@@ -197,7 +74,7 @@ def make_post(post_dict):
 		# Grab post details from dictionary
 		post_id = post_dict[post][3]
 		if not duplicate_check(post_id): # Make sure post is not a duplicate
-			file_path = get_media(post_dict[post][2], post_dict[post])
+			file_path = get_media(post_dict[post][2], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
 			# Make sure the post contains media (if it doesn't, then file_path would be blank)
 			if (((MEDIA_POSTS_ONLY is True) and (file_path)) or (MEDIA_POSTS_ONLY is False)):
 				# Post on Twitter
@@ -276,7 +153,7 @@ except BaseException as e:
 # Make sure config file exists
 try:
 	config = configparser.ConfigParser()
-	config.read(CONFIG_FILE)
+	config.read('config.ini')
 except BaseException as e:
 	print ('[EROR] Error while reading config file:', str(e))
 	sys.exit()
@@ -288,7 +165,6 @@ SUBREDDIT_TO_MONITOR = config['BotSettings']['SubredditToMonitor']
 NSFW_POSTS_ALLOWED = bool(distutils.util.strtobool(config['BotSettings']['NSFWPostsAllowed']))
 SELF_POSTS_ALLOWED = bool(distutils.util.strtobool(config['BotSettings']['SelfPostsAllowed']))
 # Settings related to media attachments
-IMAGE_DIR = config['MediaSettings']['MediaFolder']
 MEDIA_POSTS_ONLY = bool(distutils.util.strtobool(config['MediaSettings']['MediaPostsOnly']))
 # Twitter info
 POST_TO_TWITTER = bool(distutils.util.strtobool(config['Twitter']['PostToTwitter']))
@@ -472,7 +348,7 @@ if (os.name == 'nt'):
 			title = masto_username + '@' + MASTODON_INSTANCE_DOMAIN + ' - Tootbot'
 	except :
 		title = 'Tootbot'
-	os.system('title ' + title)
+		os.system('title ' + title)
 # Run the main script
 while True:
 	# Make sure logging file and media directory exists
@@ -483,9 +359,6 @@ while True:
 			wr.writerow(default)
 		print ('[ OK ] ' + CACHE_CSV + ' file not found, created a new one')
 		cache.close()
-	if not os.path.exists(IMAGE_DIR):
-		os.makedirs(IMAGE_DIR)
-		print ('[ OK ] ' + IMAGE_DIR + ' folder not found, created a new one')
 	# Continue with script
 	subreddit = setup_connection_reddit(SUBREDDIT_TO_MONITOR)
 	post_dict = tweet_creator(subreddit)

@@ -2,3 +2,5 @@ media/
 cache.csv
 *.secret
 .vscode/
+__pycache__/
+*.pyc
