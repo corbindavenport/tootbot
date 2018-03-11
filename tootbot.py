@@ -193,9 +193,6 @@ def log_post(id, post_url):
 	cache.close()
 
 def make_post(post_dict):
-	auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-	auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-	api = tweepy.API(auth)
 	for post in post_dict:
 		# Grab post details from dictionary
 		post_id = post_dict[post][3]
@@ -204,7 +201,7 @@ def make_post(post_dict):
 			# Make sure the post contains media (if it doesn't, then file_path would be blank)
 			if (((MEDIA_POSTS_ONLY is True) and (file_path)) or (MEDIA_POSTS_ONLY is False)):
 				# Post on Twitter
-				if ACCESS_TOKEN:
+				if POST_TO_TWITTER:
 					try:
 						auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 						auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
@@ -364,7 +361,7 @@ if POST_TO_TWITTER is True:
 		ACCESS_TOKEN = twitter_config['Twitter']['AccessToken']
 		ACCESS_TOKEN_SECRET = twitter_config['Twitter']['AccessTokenSecret']
 		CONSUMER_KEY = twitter_config['Twitter']['ConsumerKey']
-		CONSUMER_SECRET = twitter_config['Twitter']['ConsumerKeySecret']
+		CONSUMER_SECRET = twitter_config['Twitter']['ConsumerSecret']
 		try:
 			# Make sure authentication is working
 			auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
@@ -384,7 +381,6 @@ if POST_TO_TWITTER is True:
 		ACCESS_TOKEN_SECRET = ''.join(input('[ .. ] Enter access token secret for Twitter account: ').split())
 		CONSUMER_KEY = ''.join(input('[ .. ] Enter consumer key for Twitter account: ').split())
 		CONSUMER_SECRET = ''.join(input('[ .. ] Enter consumer secret for Twitter account: ').split())
-		print (ACCESS_TOKEN, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET)
 		print ('[ OK ] Attempting to log in to Twitter...')
 		try:
 			# Make sure authentication is working
@@ -456,7 +452,7 @@ if MASTODON_INSTANCE_DOMAIN:
 # Set the command line window title on Windows
 if (os.name == 'nt'):
 	try:
-		if ACCESS_TOKEN and MASTODON_INSTANCE_DOMAIN:
+		if POST_TO_TWITTER and MASTODON_INSTANCE_DOMAIN:
 			# Set title with both Twitter and Mastodon usernames
 			# Get Twitter username
 			twitter_username = twitter.me().screen_name
@@ -464,7 +460,7 @@ if (os.name == 'nt'):
 			masto_username = mastodon.account_verify_credentials()['username']
 			# Set window title
 			title = twitter_username + '@twitter.com and ' + masto_username + '@' + MASTODON_INSTANCE_DOMAIN + ' - Tootbot'
-		elif ACCESS_TOKEN:
+		elif POST_TO_TWITTER:
 			# Set title with just Twitter username
 			twitter_username = twitter.me().screen_name
 			# Set window title
