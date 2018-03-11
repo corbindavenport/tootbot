@@ -7,6 +7,12 @@ from PIL import Image
 import urllib.request
 import requests
 import re
+import hashlib
+
+# Function for opening file as string of bytes
+def file_as_bytes(file):
+  with file:
+    return file.read()
 
 # Function for downloading images from a URL to media folder
 def save_file(img_url, file_path):
@@ -130,7 +136,14 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
       file_path = IMAGE_DIR + '/' + id + '-downsized.gif'
       print('[ OK ] Downloading Giphy at URL ' + giphy_url + ' to ' + file_path)
       giphy_file = save_file(giphy_url, file_path)
-      return giphy_file
+      # Check the hash to make sure it's not a GIF saying "This content is not available"
+      # More info: https://github.com/corbindavenport/tootbot/issues/8
+      hash = hashlib.md5(file_as_bytes(open(giphy_file, 'rb'))).hexdigest()
+      if (hash == '59a41d58693283c72d9da8ae0561e4e5'):
+        print('[EROR] Giphy has not processed a downsized GIF version of this link, so it can not be posted')
+        return
+      else:
+        return giphy_file
     else:
       print('[EROR] Could not identify Giphy ID in this URL:', img_url)
       return
