@@ -1,4 +1,6 @@
 media/
 cache.csv
-mastodon.secret
+*.secret
 .vscode/
+__pycache__/
+*.pyc
