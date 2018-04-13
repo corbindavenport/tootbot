@@ -180,6 +180,8 @@ if config['BotSettings']['Hashtags']:
 	# Parse list of hashtags
 	HASHTAGS = config['BotSettings']['Hashtags']
 	HASHTAGS = [x.strip() for x in HASHTAGS.split(',')]
+else:
+	HASHTAGS = ''
 # Settings related to media attachments
 MEDIA_POSTS_ONLY = bool(distutils.util.strtobool(config['MediaSettings']['MediaPostsOnly']))
 # Twitter info
