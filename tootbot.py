@@ -31,20 +31,26 @@ def tweet_creator(subreddit_info):
 			print('[ OK ] Skipping', submission.id, 'because it is marked as a spoiler')
 			continue
 		else:
-			# Set the Twitter max title length for 280, minus the length of the shortlink, minus one for the space between title and shortlink
-			twitter_max_title_length = 280 - len(submission.shortlink) - 1
-			# Set the Mastodon max title length for 500, minus the length of the shortlink, minus one for the space between title and shortlink
-			mastodon_max_title_length = 500 - len(submission.shortlink) - 1
+			# Create string of hashtags
+			hashtag_string = ''
+			if HASHTAGS:
+				for x in HASHTAGS:
+					# Add hashtag to string, followed by a space for the next one
+					hashtag_string += '#' + x + ' '
+			# Set the Twitter max title length for 280, minus the length of the shortlink and hashtags, minus one for the space between title and shortlink
+			twitter_max_title_length = 280 - len(submission.shortlink) - len(hashtag_string) - 1
+			# Set the Mastodon max title length for 500, minus the length of the shortlink and hashtags, minus one for the space between title and shortlink
+			mastodon_max_title_length = 500 - len(submission.shortlink) - len(hashtag_string) - 1
 			# Create contents of the Twitter post
 			if len(submission.title) < twitter_max_title_length:
-				twitter_post = submission.title + ' ' + submission.shortlink
+				twitter_post = submission.title + ' ' + hashtag_string + submission.shortlink
 			else:
-				twitter_post = submission.title[:twitter_max_title_length] + '... ' + submission.shortlink
+				twitter_post = submission.title[:twitter_max_title_length] + '... ' + hashtag_string + submission.shortlink
 			# Create contents of the Mastodon post
 			if len(submission.title) < mastodon_max_title_length:
-				mastodon_post = submission.title + ' ' + submission.shortlink
+				mastodon_post = submission.title + ' ' + hashtag_string + submission.shortlink
 			else:
-				mastodon_post = submission.title[:mastodon_max_title_length] + '... ' + submission.shortlink
+				mastodon_post = submission.title[:mastodon_max_title_length] + '... ' + hashtag_string + submission.shortlink
 			# Create dict
 			post_dict[submission.id] = [twitter_post,mastodon_post,submission.url, submission.id, submission.over_18]
 	return post_dict
@@ -170,6 +176,10 @@ SUBREDDIT_TO_MONITOR = config['BotSettings']['SubredditToMonitor']
 NSFW_POSTS_ALLOWED = bool(distutils.util.strtobool(config['BotSettings']['NSFWPostsAllowed']))
 SPOILERS_ALLOWED = bool(distutils.util.strtobool(config['BotSettings']['SpoilersAllowed']))
 SELF_POSTS_ALLOWED = bool(distutils.util.strtobool(config['BotSettings']['SelfPostsAllowed']))
+if config['BotSettings']['Hashtags']:
+	# Parse list of hashtags
+	HASHTAGS = config['BotSettings']['Hashtags']
+	HASHTAGS = [x.strip() for x in HASHTAGS.split(',')]
 # Settings related to media attachments
 MEDIA_POSTS_ONLY = bool(distutils.util.strtobool(config['MediaSettings']['MediaPostsOnly']))
 # Twitter info
