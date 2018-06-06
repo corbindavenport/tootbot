@@ -1,0 +1,13 @@
+{
+    "name": "Tootbot",
+    "description": "Python tool for mirroring Reddit posts to Twitter and Mastodon",
+    "repository": "https://github.com/corbindavenport/tootbot",
+    "keywords": [
+        "tootbot",
+        "reddit",
+        "twitter",
+        "mastodon",
+        "python",
+        "bot"
+    ]
+}
