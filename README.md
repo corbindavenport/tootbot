@@ -5,7 +5,7 @@ This is a Python bot that looks up posts from specified subreddits and automatic
 **Features:**
 
 * Tootbot can post to both Twitter and [Mastodon](https://joinmastodon.org/)
-* Media from Gfycat, Imgur, Reddit, and Giphy is automatically attached in the social media post (unless the video file is too large or cannot be converted into a GIF)
+* Media from direct links, Gfycat, Imgur, Reddit, and Giphy is automatically attached in the social media post (unless the video file is too large or cannot be converted into a GIF)
 * Links that do not contain media can be skipped, ideal for meme accounts like [@ItMeIRL](https://twitter.com/ItMeIRL)
 * NSFW content and self-posts can be filtered
 * Tootbot can monitor multiple subreddits at once
@@ -19,4 +19,4 @@ The developers of Tootbot hold no liability for what you do with this script or 
 
 ## Setup and usage
 
-For instructions on setting up and using Tootbot, please visit [the wiki](https://github.com/corbindavenport/tootbot/wiki).
+For instructions on setting up and using Tootbot, please visit [the wiki](https://github.com/corbindavenport/tootbot/wiki). **Heroku support is under development, but it does not work yet.**
