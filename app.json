@@ -36,8 +36,8 @@
             "value": "true"
         },
         "HASHTAGS": {
-            "description": "List of hashtags to be used on every post, separated by commas without # symbols (example: hashtag1, hashtag2). Leaving this blank will disable hashtags.",
-            "value": ""
+            "description": "List of hashtags to be used on every post, separated by commas without # symbols (example: hashtag1, hashtag2). Leave this setting as 'false' if you don't want to use hashtags.",
+            "value": "false"
         },
         "MEDIA_POSTS_ONLY": {
             "description": "Set the bot to only post Reddit posts that directly link to media. This is ideal for meme accounts and other media-only use cases. Default is 'false'.",
