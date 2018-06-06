@@ -5,6 +5,7 @@ from gfycat.client import GfycatClient
 from imgurpython import ImgurClient
 from PIL import Image
 import urllib.request
+from urllib.request import urlopen
 import requests
 import re
 import hashlib
@@ -43,7 +44,7 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
       os.makedirs(IMAGE_DIR)
       print ('[ OK ] ' + IMAGE_DIR + ' folder not found, created a new one')
   # Download and save the linked image
-  if any(s in img_url for s in ('i.redd.it', 'i.reddituploads.com')): # Reddit links
+  if any(s in img_url for s in ('i.redd.it', 'i.reddituploads.com')): # Reddit-hosted images
     file_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
     file_extension = os.path.splitext(img_url)[-1].lower()
     # Fix for issue with i.reddituploads.com links not having a file extension in the URL
@@ -148,5 +149,21 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
       print('[EROR] Could not identify Giphy ID in this URL:', img_url)
       return
   else:
-    # Silently fail when there isn't a media attachment to download
-    return
+    # Check if URL is an image, based on the MIME type
+    image_formats = ('image/png', 'image/jpeg', 'image/gif', 'image/webp')
+    img_site = urlopen(img_url)
+    meta = img_site.info()
+    if meta["content-type"] in image_formats:
+      # URL appears to be an image, so download it
+      file_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
+      file_path = IMAGE_DIR + '/' + file_name
+      print('[ OK ] Downloading file at URL ' + img_url + ' to ' + file_path)
+      try:
+        img = save_file(img_url, file_path)
+        return img
+      except BaseException as e:
+        print ('[EROR] Error while downloading image:', str(e))
+        return
+    else:
+      print ('[EROR] URL does not point to a valid image file.')
+      return
