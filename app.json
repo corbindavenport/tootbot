@@ -9,5 +9,23 @@
         "mastodon",
         "python",
         "bot"
-    ]
+    ],
+    "env": {
+        "REDDIT_AGENT": {
+            "description": "The agent string for Reddit API access.",
+            "value": ""
+        },
+        "REDDIT_SECRET": {
+            "description": "The client secret for Reddit API access.",
+            "value": ""
+        },
+        "IMGUR_ID": {
+            "description": "The ID for Imgur API access.",
+            "value": ""
+        },
+        "IMGUR_SECRET": {
+            "description": "The client secret for Imgur API access.",
+            "value": ""
+        }
+    }
 }
