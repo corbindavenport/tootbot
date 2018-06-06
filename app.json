@@ -11,20 +11,52 @@
         "bot"
     ],
     "env": {
+        "DELAY_BETWEEN_POSTS": {
+            "description": "Minimum delay between social media posts, in seconds. Default is '600'.",
+            "value": "600"
+        },
+        "POST_LIMIT": {
+            "description": "Minimum position of post on subreddit front page that the bot will look at. Default is '10'.",
+            "value": "10"
+        },
+        "SUBREDDIT_TO_MONITOR": {
+            "description": "Name of subreddit to take posts from, without the /r/ part. Multiple subreddits can be used like this: 'gaming+funny+news'",
+            "value": ""
+        },
+        "NSFW_POSTS_ALLOWED": {
+            "description": "Allow NSFW Reddit posts to be posted by the bot. NSFW media will be marked as sensitive on Mastodon, regardless of this setting. Default is 'false'.",
+            "value": "false"
+        },
+        "SPOILERS_ALLOWED": {
+            "description": "Allow Reddit posts marked as spoilers to be posted by the bot. Default is 'true'.",
+            "value": "true"
+        },
+        "SELF_POSTS_ALLOWED": {
+            "description": "Allow Reddit posts marked as spoilers to be posted by the bot. Default is 'true'.",
+            "value": "true"
+        },
+        "HASHTAGS": {
+            "description": "List of hashtags to be used on every post, separated by commas without # symbols (example: hashtag1, hashtag2). Leaving this blank will disable hashtags.",
+            "value": ""
+        },
+        "MEDIA_POSTS_ONLY": {
+            "description": "Set the bot to only post Reddit posts that directly link to media. This is ideal for meme accounts and other media-only use cases. Default is 'false'.",
+            "value": "false"
+        },
         "REDDIT_AGENT": {
-            "description": "The agent string for Reddit API access.",
+            "description": "The agent string for Reddit API access. You can create a Reddit application here: https://www.reddit.com/prefs/apps",
             "value": ""
         },
         "REDDIT_SECRET": {
-            "description": "The client secret for Reddit API access.",
+            "description": "The client secret for Reddit API access. You can create a Reddit application here: https://www.reddit.com/prefs/apps",
             "value": ""
         },
         "IMGUR_ID": {
-            "description": "The ID for Imgur API access.",
+            "description": "The ID for Imgur API access. You can create an Imgur application here: https://api.imgur.com/oauth2/addclient",
             "value": ""
         },
         "IMGUR_SECRET": {
-            "description": "The client secret for Imgur API access.",
+            "description": "The client secret for Imgur API access. You can create an Imgur application here: https://api.imgur.com/oauth2/addclient",
             "value": ""
         }
     }
