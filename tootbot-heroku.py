@@ -193,10 +193,15 @@ POST_TO_TWITTER = bool(distutils.util.strtobool(
     os.environ.get('POST_TO_TWITTER', None)))
 if POST_TO_TWITTER is True:
     print('[ OK ] Attempting to log in to Twitter...')
+    # Read API keys from environment variables
+    ACCESS_TOKEN = os.environ.get('TWITTER_ACCESS_TOKEN', None)
+    ACCESS_TOKEN_SECRET = os.environ.get('TWITTER_ACCESS_TOKEN_SECRET', None)
+    CONSUMER_KEY = os.environ.get('TWITTER_CONSUMER_KEY', None)
+    CONSUMER_SECRET = os.environ.get('TWITTER_CONSUMER_SECRET', None)
     try:
         # Make sure authentication is working
-        auth = tweepy.OAuthHandler(os.environ.get('TWITTER_CONSUMER_KEY', None), os.environ.get('TWITTER_CONSUMER_SECRET', None))
-        auth.set_access_token(os.environ.get('TWITTER_ACCESS_TOKEN', None), os.environ.get('TWITTER_ACCESS_TOKEN_SECRET', None))
+        auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+        auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
         twitter = tweepy.API(auth)
         twitter_username = twitter.me().screen_name
         print('[ OK ] Sucessfully authenticated on Twitter as @' + twitter_username)
