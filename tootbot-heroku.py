@@ -182,13 +182,6 @@ else:
 # Settings related to media attachments
 MEDIA_POSTS_ONLY = bool(distutils.util.strtobool(
     os.environ.get('MEDIA_POSTS_ONLY', None)))
-# Twitter info
-POST_TO_TWITTER = bool(distutils.util.strtobool(
-    os.environ.get('POST_TO_TWITTER', None)))
-# Mastodon info
-MASTODON_INSTANCE_DOMAIN = os.environ.get('MASTODON_INSTANCE_DOMAIN', None)
-MASTODON_SENSITIVE_MEDIA = bool(
-    distutils.util.strtobool(os.environ.get('SENSITIVE_MEDIA', None)))
 # Reddit info
 REDDIT_AGENT = os.environ.get('REDDIT_AGENT', None)
 REDDIT_CLIENT_SECRET = os.environ.get('REDDIT_SECRET', None)
@@ -196,6 +189,8 @@ REDDIT_CLIENT_SECRET = os.environ.get('REDDIT_SECRET', None)
 IMGUR_CLIENT = os.environ.get('IMGUR_ID', None)
 IMGUR_CLIENT_SECRET = os.environ.get('IMGUR_SECRET', None)
 # Log into Twitter if enabled in settings
+POST_TO_TWITTER = bool(distutils.util.strtobool(
+    os.environ.get('POST_TO_TWITTER', None)))
 if POST_TO_TWITTER is True:
     print('[ OK ] Attempting to log in to Twitter...')
     try:
@@ -210,9 +205,11 @@ if POST_TO_TWITTER is True:
         print('[EROR] Tootbot cannot continue, now shutting down')
         exit()
 # Log into Mastodon if enabled in settings
-
-#TODO: ADD MASTODON SUPPORT
-
+POST_TO_MASTODON = bool(distutils.util.strtobool(
+    os.environ.get('POST_TO_MASTODON', None)))
+if POST_TO_MASTODON is True:
+    #TODO: Implement Mastodon support with variables MASTODON_INSTANCE_DOMAIN and MASTODON_SENSITIVE_MEDIA
+    print('[WARN] Mastodon posting is enabled, but Mastodon posting has not yet been implemented in the Heroku version of Tootbot.')
 # Run the main script
 while True:
     # Make sure logging file and media directory exists
