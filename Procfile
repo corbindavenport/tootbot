@@ -1,1 +1,1 @@
-web: python tootbot-heroku.py
+worker: python tootbot-heroku.py
