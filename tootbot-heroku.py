@@ -18,8 +18,6 @@ import socketserver
 import _thread
 
 def start_server():
-    web_dir = os.path.join(os.path.dirname(__file__), 'web')
-    os.chdir(web_dir)
     Handler = http.server.SimpleHTTPRequestHandler
     with socketserver.TCPServer(("", 443), Handler) as httpd:
         print("[ OK ] Web server started on port 443.")
