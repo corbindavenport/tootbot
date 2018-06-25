@@ -172,12 +172,13 @@ SPOILERS_ALLOWED = bool(distutils.util.strtobool(
     os.environ.get('SPOILERS_ALLOWED', None)))
 SELF_POSTS_ALLOWED = bool(distutils.util.strtobool(
     os.environ.get('SELF_POSTS_ALLOWED', None)))
-if os.environ.get('HASHTAGS', None):
+if os.environ.get('HASHTAGS', None) == 'false':
+    print('[ OK ] No hashtags configured in settings.')
+    HASHTAGS = ''
+else:
     # Parse list of hashtags
     HASHTAGS = os.environ.get('HASHTAGS', None)
     HASHTAGS = [x.strip() for x in HASHTAGS.split(',')]
-else:
-    HASHTAGS = ''
 # Settings related to media attachments
 MEDIA_POSTS_ONLY = bool(distutils.util.strtobool(
     os.environ.get('MEDIA_POSTS_ONLY', None)))
