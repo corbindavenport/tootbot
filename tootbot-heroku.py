@@ -13,7 +13,17 @@ import distutils.core
 import itertools
 from mastodon import Mastodon
 from getmedia import get_media
+import http.server
+import socketserver
+import _thread
 
+def start_server():
+    web_dir = os.path.join(os.path.dirname(__file__), 'web')
+    os.chdir(web_dir)
+    Handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", 8000), Handler) as httpd:
+        print("[ OK ] Web server started on port 8000.")
+        httpd.serve_forever()
 
 def tweet_creator(subreddit_info):
     post_dict = {}
@@ -215,6 +225,8 @@ POST_TO_MASTODON = bool(distutils.util.strtobool(
 if POST_TO_MASTODON is True:
     #TODO: Implement Mastodon support with variables MASTODON_INSTANCE_DOMAIN and MASTODON_SENSITIVE_MEDIA
     print('[WARN] Mastodon posting is enabled, but Mastodon posting has not yet been implemented in the Heroku version of Tootbot.')
+# Start web server in background
+_thread.start_new_thread(start_server, ())
 # Run the main script
 while True:
     # Make sure logging file and media directory exists
