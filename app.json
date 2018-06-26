@@ -11,6 +11,14 @@
         "bot"
     ],
     "env": {
+        "POST_TO_TWITTER": {
+            "description": "Set this to 'true' if you want Tootbot to post to a Twitter account. You will need to enter API information once the Heroku app is set up.",
+            "value": "false"
+        },
+        "POST_TO_MASTODON": {
+            "description": "Set this to 'true' if you want Tootbot to post to a Mastodon account. NOTE: MASTODON SUPPORT DOES NOT WORK RIGHT NOW.",
+            "value": "false"
+        },
         "DELAY_BETWEEN_POSTS": {
             "description": "Minimum delay between social media posts, in seconds. Default is '600'.",
             "value": "600"
@@ -58,14 +66,6 @@
         "IMGUR_SECRET": {
             "description": "The client secret for Imgur API access. You can create an Imgur application here: https://api.imgur.com/oauth2/addclient",
             "value": ""
-        },
-        "POST_TO_TWITTER": {
-            "description": "Set this to 'true' if you want Tootbot to post to a Twitter account. You will need to enter API information once the Heroku app is set up.",
-            "value": "false"
-        },
-        "POST_TO_MASTODON": {
-            "description": "Set this to 'true' if you want Tootbot to post to a Mastodon account. NOTE: MASTODON SUPPORT DOES NOT WORK RIGHT NOW.",
-            "value": "false"
         }
     }
 }
