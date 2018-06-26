@@ -194,10 +194,16 @@ POST_TO_TWITTER = bool(distutils.util.strtobool(
 if POST_TO_TWITTER is True:
     print('[ OK ] Attempting to log in to Twitter...')
     # Read API keys from environment variables
-    ACCESS_TOKEN = os.environ.get('TWITTER_ACCESS_TOKEN', None)
-    ACCESS_TOKEN_SECRET = os.environ.get('TWITTER_ACCESS_TOKEN_SECRET', None)
-    CONSUMER_KEY = os.environ.get('TWITTER_CONSUMER_KEY', None)
-    CONSUMER_SECRET = os.environ.get('TWITTER_CONSUMER_SECRET', None)
+    try:
+        ACCESS_TOKEN = os.environ.get('TWITTER_ACCESS_TOKEN', None)
+        ACCESS_TOKEN_SECRET = os.environ.get('TWITTER_ACCESS_TOKEN_SECRET', None)
+        CONSUMER_KEY = os.environ.get('TWITTER_CONSUMER_KEY', None)
+        CONSUMER_SECRET = os.environ.get('TWITTER_CONSUMER_SECRET', None)
+    except BaseException as e:
+        print('[EROR] Error while reading Twitter API tokens:', str(e))
+        print('[EROR] Please see the Tootbot wiki for full setup instructions.')
+        print('[EROR] Tootbot cannot continue, now shutting down')
+        exit()
     try:
         # Make sure authentication is working
         auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
