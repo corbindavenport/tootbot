@@ -11,10 +11,7 @@
         "bot"
     ],
     "addons": [
-        "heroku-redis",
-        {
-            "plan": "heroku-redis:hobby-dev"
-        }
+        "heroku-redis"
     ],
     "env": {
         "POST_TO_TWITTER": {
