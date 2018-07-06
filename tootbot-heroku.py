@@ -33,6 +33,10 @@ def tweet_creator(subreddit_info):
             print('[ OK ] Skipping', submission.id,
                   'because it is marked as a spoiler')
             continue
+        elif (submission.stickied):
+            print('[ OK ] Skipping', submission.id,
+                  'because it is stickied.')
+            continue
         else:
             # Create string of hashtags
             hashtag_string = ''

@@ -42,7 +42,7 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
   IMAGE_DIR = config['MediaSettings']['MediaFolder']
   if not os.path.exists(IMAGE_DIR):
       os.makedirs(IMAGE_DIR)
-      print ('[ OK ] ' + IMAGE_DIR + ' folder not found, created a new one')
+      print ('[ OK ] Media folder not found, created a new one')
   # Download and save the linked image
   if any(s in img_url for s in ('i.redd.it', 'i.reddituploads.com')): # Reddit-hosted images
     file_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
@@ -53,7 +53,7 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
       file_name += '.jpg'
       img_url += '.jpg'
     # Grab the GIF versions of .GIFV links
-    # When Tweepy adds support for video uploads, we can use grab the MP4 versions
+    # When Tweepy adds support for video uploads, we can use the MP4 versions instead
     if (file_extension == '.gifv'):
       file_extension = file_extension.replace('.gifv', '.gif')
       file_name = file_name.replace('.gifv', '.gif')
