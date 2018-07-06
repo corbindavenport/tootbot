@@ -3,7 +3,6 @@ import json
 import tweepy
 import time
 import os
-import csv
 import configparser
 import urllib.parse
 import sys
@@ -11,6 +10,7 @@ from imgurpython import ImgurClient
 from glob import glob
 import distutils.core
 import itertools
+import redis
 from mastodon import Mastodon
 from getmedia import get_media
 
@@ -74,22 +74,16 @@ def setup_connection_reddit(subreddit):
 
 
 def duplicate_check(id):
-    value = False
-    with open(CACHE_CSV, 'rt', newline='') as f:
-        reader = csv.reader(f, delimiter=',')
-        for row in reader:
-            if id in row:
-                value = True
-    f.close()
-    return value
+    r = redis.from_url(os.environ.get("REDIS_URL"))
+    if r.get(id):
+        return True
+    else:
+        return False
 
 
 def log_post(id, post_url):
-    with open(CACHE_CSV, 'a', newline='') as cache:
-        date = time.strftime("%d/%m/%Y") + ' ' + time.strftime("%H:%M:%S")
-        wr = csv.writer(cache, delimiter=',')
-        wr.writerow([id, date, post_url])
-    cache.close()
+    r = redis.from_url(os.environ.get("REDIS_URL"))
+    r.set(id, post_url)
 
 
 def make_post(post_dict):
@@ -126,7 +120,7 @@ def make_post(post_dict):
                     except BaseException as e:
                         print('[EROR] Error while posting tweet:', str(e))
                         # Log the post anyways
-                        log_post(post_dict[post][3],
+                        log_post(post_id,
                                  'Error while posting tweet: ' + str(e))
                 # Post on Mastodon
                 # TODO: ADD MASTODON POSTING SUPPORT
@@ -152,7 +146,7 @@ try:
     with urllib.request.urlopen("https://raw.githubusercontent.com/corbindavenport/tootbot/update-check/current-version.txt") as url:
         s = url.read()
         new_version = s.decode("utf-8").rstrip()
-        current_version = 2.2  # Current version of script
+        current_version = 2.3  # Current version of script
         if (current_version < float(new_version)):
             print('[WARN] A new version of Tootbot (' + str(new_version) + ') is available! (you have ' + str(current_version) + ')')
             print('[WARN] Get the latest update from here: https://github.com/corbindavenport/tootbot/releases')
@@ -161,8 +155,14 @@ try:
     url.close()
 except BaseException as e:
     print('[EROR] Error while checking for updates:', str(e))
+# Connect to Redis database
+try:
+    r = redis.from_url(os.environ.get("REDIS_URL"))
+except BaseException as e:
+    print('[EROR] Error while connecting to Redis:', str(e))
+    print('[EROR] Tootbot cannot continue, now shutting down')
+    exit()
 # General settings
-CACHE_CSV = "cache.csv"
 DELAY_BETWEEN_TWEETS = int(os.environ.get('DELAY_BETWEEN_POSTS', None))
 POST_LIMIT = int(os.environ.get('POST_LIMIT', None))
 SUBREDDIT_TO_MONITOR = os.environ.get('SUBREDDIT_TO_MONITOR', None)
@@ -223,15 +223,6 @@ if POST_TO_MASTODON is True:
     print('[WARN] Mastodon posting is enabled, but Mastodon posting has not yet been implemented in the Heroku version of Tootbot.')
 # Run the main script
 while True:
-    # Make sure logging file and media directory exists
-    if not os.path.exists(CACHE_CSV):
-        with open(CACHE_CSV, 'w', newline='') as cache:
-            default = ['Reddit post ID', 'Date and time', 'Post link']
-            wr = csv.writer(cache)
-            wr.writerow(default)
-        print('[ OK ] ' + CACHE_CSV + ' file not found, created a new one')
-        cache.close()
-    # Continue with script
     subreddit = setup_connection_reddit(SUBREDDIT_TO_MONITOR)
     post_dict = tweet_creator(subreddit)
     make_post(post_dict)

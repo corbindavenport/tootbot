@@ -10,6 +10,12 @@
         "python",
         "bot"
     ],
+    "addons": [
+        "heroku-redis",
+        {
+            "plan": "heroku-redis:hobby-dev"
+        }
+    ],
     "env": {
         "POST_TO_TWITTER": {
             "description": "Set this to 'true' if you want Tootbot to post to a Twitter account. You will need to enter API information once the Heroku app is set up.",
