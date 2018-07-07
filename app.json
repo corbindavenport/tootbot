@@ -43,7 +43,7 @@
             "value": "true"
         },
         "SELF_POSTS_ALLOWED": {
-            "description": "Allow Reddit posts marked as spoilers to be posted by the bot. Default is 'true'.",
+            "description": "Allow Reddit self posts to be posted by the bot. Default is 'true'.",
             "value": "true"
         },
         "HASHTAGS": {
