@@ -34,6 +34,10 @@ def tweet_creator(subreddit_info):
             print('[ OK ] Skipping', submission.id,
                   'because it is marked as a spoiler')
             continue
+        elif (submission.stickied):
+            print('[ OK ] Skipping', submission.id,
+                  'because it is stickied')
+            continue
         else:
             # Create string of hashtags
             hashtag_string = ''
@@ -127,7 +131,7 @@ def make_post(post_dict):
                     except BaseException as e:
                         print('[EROR] Error while posting tweet:', str(e))
                         # Log the post anyways
-                        log_post(post_dict[post][3],
+                        log_post(post_id,
                                  'Error while posting tweet: ' + str(e))
                 # Post on Mastodon
                 if MASTODON_INSTANCE_DOMAIN:
@@ -183,7 +187,7 @@ try:
     with urllib.request.urlopen("https://raw.githubusercontent.com/corbindavenport/tootbot/update-check/current-version.txt") as url:
         s = url.read()
         new_version = s.decode("utf-8").rstrip()
-        current_version = 2.2  # Current version of script
+        current_version = 2.3  # Current version of script
         if (current_version < float(new_version)):
             print('[WARN] A new version of Tootbot (' + str(new_version) + ') is available! (you have ' + str(current_version) + ')')
             print('[WARN] Get the latest update from here: https://github.com/corbindavenport/tootbot/releases')
