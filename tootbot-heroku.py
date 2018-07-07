@@ -85,9 +85,9 @@ def duplicate_check(id):
         return False
 
 
-def log_post(id, post_url):
+def log_post(id):
     r = redis.from_url(os.environ.get("REDIS_URL"))
-    r.set(id, post_url)
+    r.set(id, '')
 
 
 def make_post(post_dict):
@@ -119,13 +119,11 @@ def make_post(post_dict):
                             tweet = twitter.update_status(
                                 status=post_dict[post][0])
                         # Log the tweet
-                        log_post(post_id, 'https://twitter.com/' +
-                                 twitter_username + '/status/' + tweet.id_str + '/')
+                        log_post(post_id)
                     except BaseException as e:
                         print('[EROR] Error while posting tweet:', str(e))
                         # Log the post anyways
-                        log_post(post_id,
-                                 'Error while posting tweet: ' + str(e))
+                        log_post(post_id)
                 # Post on Mastodon
                 # TODO: ADD MASTODON POSTING SUPPORT
                 # Cleanup media file
