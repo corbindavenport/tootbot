@@ -87,7 +87,7 @@ def duplicate_check(id):
 
 def log_post(id):
     r = redis.from_url(os.environ.get("REDIS_URL"))
-    r.set(id, '')
+    r.set(id, 'true')
 
 
 def make_post(post_dict):
