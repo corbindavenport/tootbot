@@ -11,7 +11,12 @@
         "bot"
     ],
     "addons": [
-        "heroku-redis"
+        {
+            "plan": "heroku-redis",
+            "options": {
+                "maxmemory_policy": "allkeys-lru"
+            }
+        }
     ],
     "env": {
         "POST_TO_TWITTER": {
