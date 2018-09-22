@@ -167,7 +167,7 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
 
 # Function for obtaining static images/GIFs, or MP4 videos if they exist, from popular image hosts
 # This is currently only used for Mastodon posts, because the Tweepy API doesn't support video uploads
-def get_hd_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
+def get_hd_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET, submission):
   # Make sure config file exists
   try:
       config = configparser.ConfigParser()
@@ -194,6 +194,18 @@ def get_hd_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
     print('[ OK ] Downloading file at URL ' + img_url + ' to ' + file_path + ', file type identified as ' + file_extension)
     img = save_file(img_url, file_path)
     return img
+  elif ('v.redd.it' in img_url): # Reddit video
+    if submission.media:
+      # Get URL for MP4 version of reddit video
+      video_url = submission.media['reddit_video']['fallback_url']
+      # Download the file
+      file_path = IMAGE_DIR + '/video.mp4'
+      print('[ OK ] Downloading file at URL ' + video_url + ' to ' + file_path)
+      video = save_file(video_url, file_path)
+      return video
+    else:
+      print('[EROR] Reddit API returned no media for this URL:', img_url)
+      return
   elif ('imgur.com' in img_url): # Imgur
     try:
       client = ImgurClient(IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
@@ -213,11 +225,14 @@ def get_hd_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
         print (images[0])
       else: # Single image
         imgur_url = client.get_image(id).link
-      # If the URL is a GIFV link, download the MP4 file instead
+      # If the URL is a GIFV or GIF link, download the MP4 file instead
       file_extension = os.path.splitext(imgur_url)[-1].lower()
       if (file_extension == '.gifv'):
         file_extension = file_extension.replace('.gifv', '.mp4')
         imgur_url = imgur_url.replace('.gifv', '.mp4')
+      elif (file_extension == '.gif'):
+        file_extension = file_extension.replace('.gif', '.mp4')
+        imgur_url = imgur_url.replace('.gif', '.mp4')
       # Download the image
       file_path = IMAGE_DIR + '/' + id + file_extension
       print('[ OK ] Downloading Imgur image at URL ' + imgur_url + ' to ' + file_path)

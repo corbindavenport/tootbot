@@ -63,8 +63,7 @@ def tweet_creator(subreddit_info):
                 mastodon_post = submission.title[:mastodon_max_title_length] + \
                     '... ' + hashtag_string + submission.shortlink
             # Create dict
-            post_dict[submission.id] = [twitter_post, mastodon_post,
-                                        submission.url, submission.id, submission.over_18]
+            post_dict[submission.id] = [twitter_post, mastodon_post, submission.url, submission.id, submission.over_18, submission]
     return post_dict
 
 

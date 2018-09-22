@@ -64,8 +64,7 @@ def tweet_creator(subreddit_info):
                 mastodon_post = submission.title[:mastodon_max_title_length] + \
                     '... ' + hashtag_string + submission.shortlink
             # Create dict
-            post_dict[submission.id] = [twitter_post, mastodon_post,
-                                        submission.url, submission.id, submission.over_18]
+            post_dict[submission.id] = [twitter_post, mastodon_post, submission.url, submission.id, submission.over_18, submission]
     return post_dict
 
 
@@ -107,7 +106,7 @@ def make_post(post_dict):
                 media_file = get_media(post_dict[post][2], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
             # Download Mastodon-compatible version of media file (static image or MP4 file)
             if MASTODON_INSTANCE_DOMAIN:
-                hd_media_file = get_hd_media(post_dict[post][2], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
+                hd_media_file = get_hd_media(post_dict[post][2], IMGUR_CLIENT, IMGUR_CLIENT_SECRET, post_dict[post][5])
             # Post on Twitter
             if POST_TO_TWITTER:
                 # Make sure the post contains media, if MEDIA_POSTS_ONLY in config is set to True
