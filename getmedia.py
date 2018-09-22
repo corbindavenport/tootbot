@@ -81,11 +81,14 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
         imgur_url = images[0].link
       else: # Single image
         imgur_url = client.get_image(id).link
-      # If the URL is a GIFV link, change it to a GIF
+      # If the URL is a GIFV or MP4 link, change it to the GIF version
       file_extension = os.path.splitext(imgur_url)[-1].lower()
       if (file_extension == '.gifv'):
         file_extension = file_extension.replace('.gifv', '.gif')
-        img_url = imgur_url.replace('.gifv', '.gif')
+        imgur_url = imgur_url.replace('.gifv', '.gif')
+      elif (file_extension == '.mp4'):
+        file_extension = file_extension.replace('.mp4', '.gif')
+        imgur_url = imgur_url.replace('.mp4', '.gif')
       # Download the image
       file_path = IMAGE_DIR + '/' + id + file_extension
       print('[ OK ] Downloading Imgur image at URL ' + imgur_url + ' to ' + file_path)
