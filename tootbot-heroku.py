@@ -95,12 +95,16 @@ def make_post(post_dict):
         # Grab post details from dictionary
         post_id = post_dict[post][3]
         if not duplicate_check(post_id):  # Make sure post is not a duplicate
-            file_path = get_media(
-                post_dict[post][2], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
-            # Make sure the post contains media (if it doesn't, then file_path would be blank)
-            if (((MEDIA_POSTS_ONLY is True) and (file_path)) or (MEDIA_POSTS_ONLY is False)):
-                # Post on Twitter
-                if POST_TO_TWITTER:
+            # Download Twitter-compatible version of media file (static image or GIF under 3MB)
+            if POST_TO_TWITTER:
+                media_file = get_media(post_dict[post][2], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
+            # Download Mastodon-compatible version of media file (static image or MP4 file)
+            #if MASTODON_INSTANCE_DOMAIN:
+            #    hd_media_file = get_hd_media(post_dict[post][2], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
+            # Post on Twitter
+            if POST_TO_TWITTER:
+                # Make sure the post contains media, if MEDIA_POSTS_ONLY in config is set to True
+                if (((MEDIA_POSTS_ONLY is True) and media_file) or (MEDIA_POSTS_ONLY is False)):
                     try:
                         auth = tweepy.OAuthHandler(
                             CONSUMER_KEY, CONSUMER_SECRET)
@@ -108,37 +112,42 @@ def make_post(post_dict):
                             ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
                         twitter = tweepy.API(auth)
                         # Post the tweet
-                        if (file_path):
+                        if (media_file):
                             print(
                                 '[ OK ] Posting this on Twitter with media attachment:', post_dict[post][0])
                             tweet = twitter.update_with_media(
-                                filename=file_path, status=post_dict[post][0])
+                                filename=media_file, status=post_dict[post][0])
                         else:
-                            print('[ OK ] Posting this on Twitter:',
-                                  post_dict[post][0])
-                            tweet = twitter.update_status(
-                                status=post_dict[post][0])
+                            print('[ OK ] Posting this on Twitter:',post_dict[post][0])
+                            tweet = twitter.update_status(status=post_dict[post][0])
                         # Log the tweet
-                        log_post(post_id)
+                        log_post(post_id, 'https://twitter.com/' + twitter_username + '/status/' + tweet.id_str + '/')
                     except BaseException as e:
                         print('[EROR] Error while posting tweet:', str(e))
                         # Log the post anyways
-                        log_post(post_id)
-                # Post on Mastodon
-                # TODO: ADD MASTODON POSTING SUPPORT
-                # Cleanup media file
-                if (file_path):
-                    try:
-                        os.remove(file_path)
-                        print('[ OK ] Deleted media file at ' + file_path)
-                    except BaseException as e:
-                        print('[EROR] Error while deleting media file:', str(e))
-                # Go to sleep
-                print('[ OK ] Sleeping for', DELAY_BETWEEN_TWEETS, 'seconds')
-                time.sleep(DELAY_BETWEEN_TWEETS)
-            else:
-                print('[ OK ] Ignoring', post_id,
-                      'because non-media posts are disabled or there was not a valid media file downloaded')
+                        log_post(post_id, 'Error while posting tweet: ' + str(e))
+                else:
+                    print('[ OK ] Ignoring', post_id, 'because non-media posts are disabled or there was not a valid media file downloaded')
+            
+            # Post on Mastodon
+            # TODO: Add Mastodon support
+
+            # Cleanup media files
+            if (media_file):
+                try:
+                    os.remove(media_file)
+                    print('[ OK ] Deleted media file at ' + media_file)
+                except BaseException as e:
+                    print('[EROR] Error while deleting media file:', str(e))
+            #if (hd_media_file):
+            #    try:
+            #        os.remove(hd_media_file)
+            #        print('[ OK ] Deleted media file at ' + hd_media_file)
+            #    except BaseException as e:
+            #        print('[EROR] Error while deleting media file:', str(e))
+            # Go to sleep
+            print('[ OK ] Sleeping for', DELAY_BETWEEN_TWEETS, 'seconds')
+            time.sleep(DELAY_BETWEEN_TWEETS)
         else:
             print('[ OK ] Ignoring', post_id, 'because it was already posted')
 

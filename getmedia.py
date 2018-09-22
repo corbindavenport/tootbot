@@ -29,7 +29,7 @@ def save_file(img_url, file_path):
 		print('[EROR] File failed to download. Status code: ' + str(resp.status_code))
 		return
 
-# Function for obtaining direct image URLs from popular image hosts
+# Function for obtaining static images and GIFs from popular image hosts
 def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
   # Make sure config file exists
   try:
@@ -52,12 +52,6 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
       file_extension += '.jpg'
       file_name += '.jpg'
       img_url += '.jpg'
-    # Grab the GIF versions of .GIFV links
-    # When Tweepy adds support for video uploads, we can use the MP4 versions instead
-    if (file_extension == '.gifv'):
-      file_extension = file_extension.replace('.gifv', '.gif')
-      file_name = file_name.replace('.gifv', '.gif')
-      img_url = img_url.replace('.gifv', '.gif')
     # Download the file
     file_path = IMAGE_DIR + '/' + file_name
     print('[ OK ] Downloading file at URL ' + img_url + ' to ' + file_path + ', file type identified as ' + file_extension)
@@ -154,6 +148,113 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
   else:
     # Check if URL is an image, based on the MIME type
     image_formats = ('image/png', 'image/jpeg', 'image/gif', 'image/webp')
+    img_site = urlopen(img_url)
+    meta = img_site.info()
+    if meta["content-type"] in image_formats:
+      # URL appears to be an image, so download it
+      file_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
+      file_path = IMAGE_DIR + '/' + file_name
+      print('[ OK ] Downloading file at URL ' + img_url + ' to ' + file_path)
+      try:
+        img = save_file(img_url, file_path)
+        return img
+      except BaseException as e:
+        print ('[EROR] Error while downloading image:', str(e))
+        return
+    else:
+      print ('[EROR] URL does not point to a valid image file.')
+      return
+
+# Function for obtaining static images/GIFs, or MP4 videos if they exist, from popular image hosts
+# This is currently only used for Mastodon posts, because the Tweepy API doesn't support video uploads
+def get_hd_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
+  # Make sure config file exists
+  try:
+      config = configparser.ConfigParser()
+      config.read('config.ini')
+  except BaseException as e:
+      print ('[EROR] Error while reading config file:', str(e))
+      sys.exit()
+  # Make sure media folder exists
+  IMAGE_DIR = config['MediaSettings']['MediaFolder']
+  if not os.path.exists(IMAGE_DIR):
+      os.makedirs(IMAGE_DIR)
+      print ('[ OK ] Media folder not found, created a new one')
+  # Download and save the linked image
+  if any(s in img_url for s in ('i.redd.it', 'i.reddituploads.com')): # Reddit-hosted images
+    file_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
+    file_extension = os.path.splitext(img_url)[-1].lower()
+    # Fix for issue with i.reddituploads.com links not having a file extension in the URL
+    if not file_extension:
+      file_extension += '.jpg'
+      file_name += '.jpg'
+      img_url += '.jpg'
+    # Download the file
+    file_path = IMAGE_DIR + '/' + file_name
+    print('[ OK ] Downloading file at URL ' + img_url + ' to ' + file_path + ', file type identified as ' + file_extension)
+    img = save_file(img_url, file_path)
+    return img
+  elif ('imgur.com' in img_url): # Imgur
+    try:
+      client = ImgurClient(IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
+    except BaseException as e:
+      print ('[EROR] Error while authenticating with Imgur:', str(e))	
+      return
+    # Working demo of regex: https://regex101.com/r/G29uGl/2
+    regex = r"(?:.*)imgur\.com(?:\/gallery\/|\/a\/|\/)(.*?)(?:\/.*|\.|$)"
+    m = re.search(regex, img_url, flags=0)
+    if m:
+      # Get the Imgur image/gallery ID
+      id = m.group(1)
+      if any(s in img_url for s in ('/a/', '/gallery/')): # Gallery links
+        images = client.get_album_images(id)
+        # Only the first image in a gallery is used
+        imgur_url = images[0].link
+        print (images[0])
+      else: # Single image
+        imgur_url = client.get_image(id).link
+      # If the URL is a GIFV link, download the MP4 file instead
+      file_extension = os.path.splitext(imgur_url)[-1].lower()
+      if (file_extension == '.gifv'):
+        file_extension = file_extension.replace('.gifv', '.mp4')
+        imgur_url = imgur_url.replace('.gifv', '.mp4')
+      # Download the image
+      file_path = IMAGE_DIR + '/' + id + file_extension
+      print('[ OK ] Downloading Imgur image at URL ' + imgur_url + ' to ' + file_path)
+      imgur_file = save_file(imgur_url, file_path)
+      return imgur_file
+    else:
+      print('[EROR] Could not identify Imgur image/gallery ID in this URL:', img_url)
+      return
+  elif ('gfycat.com' in img_url): # Gfycat
+    gfycat_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
+    client = GfycatClient()
+    gfycat_info = client.query_gfy(gfycat_name)
+    # Download the Mp4 version
+    gfycat_url = gfycat_info['gfyItem']['mp4Url']
+    file_path = IMAGE_DIR + '/' + gfycat_name + '.mp4'
+    print('[ OK ] Downloading Gfycat at URL ' + gfycat_url + ' to ' + file_path)
+    gfycat_file = save_file(gfycat_url, file_path)
+    return gfycat_file
+  elif ('giphy.com' in img_url): # Giphy
+    # Working demo of regex: https://regex101.com/r/o8m1kA/2
+    regex = r"https?://((?:.*)giphy\.com/media/|giphy.com/gifs/|i.giphy.com/)(.*-)?(\w+)(/|\n)"
+    m = re.search(regex, img_url, flags=0)
+    if m:
+      # Get the Giphy ID
+      id = m.group(3)
+      # Download the MP4 version of the GIF
+      giphy_url = 'https://media.giphy.com/media/' + id + '/giphy.mp4'
+      file_path = IMAGE_DIR + '/' + id + 'giphy.mp4'
+      print('[ OK ] Downloading Giphy at URL ' + giphy_url + ' to ' + file_path)
+      giphy_file = save_file(giphy_url, file_path)
+      return giphy_file
+    else:
+      print('[EROR] Could not identify Giphy ID in this URL:', img_url)
+      return
+  else:
+    # Check if URL is an image or MP4 file, based on the MIME type
+    image_formats = ('image/png', 'image/jpeg', 'image/gif', 'image/webp', 'video/mp4')
     img_site = urlopen(img_url)
     meta = img_site.info()
     if meta["content-type"] in image_formats:
