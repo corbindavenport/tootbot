@@ -15,57 +15,63 @@ from mastodon import Mastodon
 from getmedia import get_media
 from getmedia import get_hd_media
 
+
 def get_reddit_posts(subreddit_info):
     post_dict = {}
     print('[ OK ] Getting posts from Reddit...')
     for submission in subreddit_info.hot(limit=POST_LIMIT):
         if (submission.over_18 and NSFW_POSTS_ALLOWED is False):
             # Skip over NSFW posts if they are disabled in the config file
-            print('[ OK ] Skipping', submission.id,
-                  'because it is marked as NSFW')
+            print('[ OK ] Skipping', submission.id, 'because it is marked as NSFW')
             continue
         elif (submission.is_self and SELF_POSTS_ALLOWED is False):
             # Skip over NSFW posts if they are disabled in the config file
-            print('[ OK ] Skipping', submission.id,
-                  'because it is a self post')
+            print('[ OK ] Skipping', submission.id, 'because it is a self post')
             continue
         elif (submission.spoiler and SPOILERS_ALLOWED is False):
             # Skip over posts marked as spoilers if they are disabled in the config file
-            print('[ OK ] Skipping', submission.id,
-                  'because it is marked as a spoiler')
+            print('[ OK ] Skipping', submission.id, 'because it is marked as a spoiler')
             continue
         elif (submission.stickied):
-            print('[ OK ] Skipping', submission.id,
-                  'because it is stickied')
+            print('[ OK ] Skipping', submission.id, 'because it is stickied')
             continue
         else:
-            # Create string of hashtags
-            hashtag_string = ''
-            if HASHTAGS:
-                for x in HASHTAGS:
-                    # Add hashtag to string, followed by a space for the next one
-                    hashtag_string += '#' + x + ' '
-            # Set the Twitter max title length for 280, minus the length of the shortlink and hashtags, minus one for the space between title and shortlink
-            twitter_max_title_length = 280 - \
-                len(submission.shortlink) - len(hashtag_string) - 1
-            # Set the Mastodon max title length for 500, minus the length of the shortlink and hashtags, minus one for the space between title and shortlink
-            mastodon_max_title_length = 500 - \
-                len(submission.shortlink) - len(hashtag_string) - 1
-            # Create contents of the Twitter post
-            if len(submission.title) < twitter_max_title_length:
-                twitter_caption = submission.title + ' ' + hashtag_string + submission.shortlink
-            else:
-                twitter_caption = submission.title[:twitter_max_title_length] + \
-                    '... ' + hashtag_string + submission.shortlink
-            # Create contents of the Mastodon post
-            if len(submission.title) < mastodon_max_title_length:
-                mastodon_caption = submission.title + ' ' + hashtag_string + submission.shortlink
-            else:
-                mastodon_caption = submission.title[:mastodon_max_title_length] + \
-                    '... ' + hashtag_string + submission.shortlink
             # Create dict
-            post_dict[submission.id] = [twitter_caption, mastodon_caption, submission.url, submission.id, submission.over_18, submission]
+            post_dict[submission.id] = submission
     return post_dict
+
+
+def get_twitter_caption(submission):
+    # Create string of hashtags
+    hashtag_string = ''
+    if HASHTAGS:
+        for x in HASHTAGS:
+            # Add hashtag to string, followed by a space for the next one
+            hashtag_string += '#' + x + ' '
+    # Set the Twitter max title length for 280, minus the length of the shortlink and hashtags, minus one for the space between title and shortlink
+    twitter_max_title_length = 280 - len(submission.shortlink) - len(hashtag_string) - 1
+    # Create contents of the Twitter post
+    if len(submission.title) < twitter_max_title_length:
+        twitter_caption = submission.title + ' ' + hashtag_string + submission.shortlink
+    else:
+        twitter_caption = submission.title[:twitter_max_title_length] + '... ' + hashtag_string + submission.shortlink
+    return twitter_caption
+
+def get_mastodon_caption(submission):
+    # Create string of hashtags
+    hashtag_string = ''
+    if HASHTAGS:
+        for x in HASHTAGS:
+            # Add hashtag to string, followed by a space for the next one
+            hashtag_string += '#' + x + ' '
+    # Set the Mastodon max title length for 500, minus the length of the shortlink and hashtags, minus one for the space between title and shortlink
+    mastodon_max_title_length = 500 - len(submission.shortlink) - len(hashtag_string) - 1
+    # Create contents of the Mastodon post
+    if len(submission.title) < mastodon_max_title_length:
+        mastodon_caption = submission.title + ' ' + hashtag_string + submission.shortlink
+    else:
+        mastodon_caption = submission.title[:mastodon_max_title_length] + '... ' + hashtag_string + submission.shortlink
+    return mastodon_caption
 
 
 def setup_connection_reddit(subreddit):
@@ -99,14 +105,14 @@ def log_post(id, post_url):
 def make_post(post_dict):
     for post in post_dict:
         # Grab post details from dictionary
-        post_id = post_dict[post][3]
+        post_id = post_dict[post].id
         if not duplicate_check(post_id):  # Make sure post is not a duplicate
             # Download Twitter-compatible version of media file (static image or GIF under 3MB)
             if POST_TO_TWITTER:
-                media_file = get_media(post_dict[post][2], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
+                media_file = get_media(post_dict[post].url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
             # Download Mastodon-compatible version of media file (static image or MP4 file)
             if MASTODON_INSTANCE_DOMAIN:
-                hd_media_file = get_hd_media(post_dict[post][2], IMGUR_CLIENT, IMGUR_CLIENT_SECRET, post_dict[post][5])
+                hd_media_file = get_hd_media(post_dict[post].url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET, post_dict[post])
             # Post on Twitter
             if POST_TO_TWITTER:
                 # Make sure the post contains media, if MEDIA_POSTS_ONLY in config is set to True
@@ -117,12 +123,13 @@ def make_post(post_dict):
                         auth.set_access_token(
                             ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
                         twitter = tweepy.API(auth)
+                        # Generate post caption
+                        caption = get_twitter_caption(post_dict[post])
                         # Post the tweet
                         if (media_file):
                             print(
-                                '[ OK ] Posting this on Twitter with media attachment:', post_dict[post][0])
-                            tweet = twitter.update_with_media(
-                                filename=media_file, status=post_dict[post][0])
+                                '[ OK ] Posting this on Twitter with media attachment:', caption)
+                            tweet = twitter.update_with_media(filename=media_file, status=caption)
                             # Clean up media file
                             try:
                                 os.remove(media_file)
@@ -130,8 +137,8 @@ def make_post(post_dict):
                             except BaseException as e:
                                 print('[EROR] Error while deleting media file:', str(e))
                         else:
-                            print('[ OK ] Posting this on Twitter:',post_dict[post][0])
-                            tweet = twitter.update_status(status=post_dict[post][0])
+                            print('[ OK ] Posting this on Twitter:',caption)
+                            tweet = twitter.update_status(status=caption)
                         # Log the tweet
                         log_post(post_id, 'https://twitter.com/' + twitter_username + '/status/' + tweet.id_str + '/')
                     except BaseException as e:
@@ -146,16 +153,18 @@ def make_post(post_dict):
                 # Make sure the post contains media, if MEDIA_POSTS_ONLY in config is set to True
                 if (((MEDIA_POSTS_ONLY is True) and hd_media_file) or (MEDIA_POSTS_ONLY is False)):
                     try:
+                        # Generate post caption
+                        caption = get_mastodon_caption(post_dict[post])
                         # Post the toot
                         if (hd_media_file):
                             print(
-                                '[ OK ] Posting this on Mastodon with media attachment:', post_dict[post][1])
+                                '[ OK ] Posting this on Mastodon with media attachment:', caption)
                             media = mastodon.media_post(hd_media_file, mime_type=None)
                             # If the post is marked as NSFW on Reddit, force sensitive media warning for images
-                            if (post_dict[post][4] == True):
-                                toot = mastodon.status_post(post_dict[post][1], media_ids=[media], spoiler_text='NSFW')
+                            if (post_dict[post].over_18 == True):
+                                toot = mastodon.status_post(caption, media_ids=[media], spoiler_text='NSFW')
                             else:
-                                toot = mastodon.status_post(post_dict[post][1], media_ids=[media], sensitive=MASTODON_SENSITIVE_MEDIA)
+                                toot = mastodon.status_post(caption, media_ids=[media], sensitive=MASTODON_SENSITIVE_MEDIA)
                             # Clean up media file
                             try:
                                 os.remove(hd_media_file)
@@ -163,18 +172,18 @@ def make_post(post_dict):
                             except BaseException as e:
                                 print('[EROR] Error while deleting media file:', str(e))
                         else:
-                            print('[ OK ] Posting this on Mastodon:', post_dict[post][1])
+                            print('[ OK ] Posting this on Mastodon:', caption)
                             # Add NSFW warning for Reddit posts marked as NSFW
-                            if (post_dict[post][4] == True):
-                                toot = mastodon.status_post(post_dict[post][1], spoiler_text='NSFW')
+                            if (post_dict[post].over_18 == True):
+                                toot = mastodon.status_post(caption, spoiler_text='NSFW')
                             else:
-                                toot = mastodon.status_post(post_dict[post][1])
+                                toot = mastodon.status_post(caption)
                         # Log the toot
                         log_post(post_id, toot["url"])
                     except BaseException as e:
                         print('[EROR] Error while posting toot:', str(e))
                         # Log the post anyways
-                        log_post(post_dict[post][3],'Error while posting toot: ' + str(e))
+                        log_post(post_id,'Error while posting toot: ' + str(e))
                 else:
                     print('[ OK ] Ignoring', post_id, 'because non-media posts are disabled or there was not a valid media file downloaded')
             
