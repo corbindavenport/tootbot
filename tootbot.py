@@ -15,7 +15,7 @@ from mastodon import Mastodon
 from getmedia import get_media
 from getmedia import get_hd_media
 
-def tweet_creator(subreddit_info):
+def get_reddit_posts(subreddit_info):
     post_dict = {}
     print('[ OK ] Getting posts from Reddit...')
     for submission in subreddit_info.hot(limit=POST_LIMIT):
@@ -53,18 +53,18 @@ def tweet_creator(subreddit_info):
                 len(submission.shortlink) - len(hashtag_string) - 1
             # Create contents of the Twitter post
             if len(submission.title) < twitter_max_title_length:
-                twitter_post = submission.title + ' ' + hashtag_string + submission.shortlink
+                twitter_caption = submission.title + ' ' + hashtag_string + submission.shortlink
             else:
-                twitter_post = submission.title[:twitter_max_title_length] + \
+                twitter_caption = submission.title[:twitter_max_title_length] + \
                     '... ' + hashtag_string + submission.shortlink
             # Create contents of the Mastodon post
             if len(submission.title) < mastodon_max_title_length:
-                mastodon_post = submission.title + ' ' + hashtag_string + submission.shortlink
+                mastodon_caption = submission.title + ' ' + hashtag_string + submission.shortlink
             else:
-                mastodon_post = submission.title[:mastodon_max_title_length] + \
+                mastodon_caption = submission.title[:mastodon_max_title_length] + \
                     '... ' + hashtag_string + submission.shortlink
             # Create dict
-            post_dict[submission.id] = [twitter_post, mastodon_post, submission.url, submission.id, submission.over_18, submission]
+            post_dict[submission.id] = [twitter_caption, mastodon_caption, submission.url, submission.id, submission.over_18, submission]
     return post_dict
 
 
@@ -434,7 +434,7 @@ while True:
     # Continue with script
     try:
         subreddit = setup_connection_reddit(SUBREDDIT_TO_MONITOR)
-        post_dict = tweet_creator(subreddit)
+        post_dict = get_reddit_posts(subreddit)
         make_post(post_dict)
     except BaseException as e:
         print('[EROR] Error in main process:', str(e))
