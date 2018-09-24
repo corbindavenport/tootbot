@@ -112,7 +112,7 @@ def make_post(post_dict):
                 media_file = get_media(post_dict[post].url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
             # Download Mastodon-compatible version of media file (static image or MP4 file)
             if MASTODON_INSTANCE_DOMAIN:
-                hd_media_file = get_hd_media(post_dict[post].url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET, post_dict[post])
+                hd_media_file = get_hd_media(post_dict[post], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
             # Post on Twitter
             if POST_TO_TWITTER:
                 # Make sure the post contains media, if MEDIA_POSTS_ONLY in config is set to True
@@ -133,7 +133,7 @@ def make_post(post_dict):
                             # Clean up media file
                             try:
                                 os.remove(media_file)
-                                print('[ OK ] Deleted media file at ' + media_file)
+                                print('[ OK ] Deleted media file at', media_file)
                             except BaseException as e:
                                 print('[EROR] Error while deleting media file:', str(e))
                         else:
@@ -168,7 +168,7 @@ def make_post(post_dict):
                             # Clean up media file
                             try:
                                 os.remove(hd_media_file)
-                                print('[ OK ] Deleted media file at ' + hd_media_file)
+                                print('[ OK ] Deleted media file at', hd_media_file)
                             except BaseException as e:
                                 print('[EROR] Error while deleting media file:', str(e))
                         else:
