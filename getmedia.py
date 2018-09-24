@@ -62,6 +62,9 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
             file_path + ', file type identified as ' + file_extension)
       img = save_file(img_url, file_path)
       return img
+  elif ('v.redd.it' in img_url):  # Reddit video
+      print ('[WARN] Reddit videos can not be uploaded to Twitter, due to API limitations')
+      return
   elif ('imgur.com' in img_url):  # Imgur
       try:
           client = ImgurClient(IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
@@ -105,8 +108,7 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
                   return imgur_file
               else:
                   # Image is not actually a GIF, so don't post it
-                  print(
-                      '[EROR] Imgur has not processed a GIF version of this link, so it can not be posted')
+                  print('[WARN] Imgur has not processed a GIF version of this link, so it can not be posted to Twitter')
                   img.close()
                   # Delete the image
                   try:
@@ -149,8 +151,7 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
           hash = hashlib.md5(file_as_bytes(
               open(giphy_file, 'rb'))).hexdigest()
           if (hash == '59a41d58693283c72d9da8ae0561e4e5'):
-              print(
-                  '[EROR] Giphy has not processed a downsized GIF version of this link, so it can not be posted')
+              print('[WARN] Giphy has not processed a 2MB GIF version of this link, so it can not be posted to Twitter')
               return
           else:
               return giphy_file
@@ -175,7 +176,7 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
               print('[EROR] Error while downloading image:', str(e))
               return
       else:
-          print('[EROR] URL does not point to a valid image file.')
+          print('[EROR] URL does not point to a valid image file')
           return
 
 # Function for obtaining static images/GIFs, or MP4 videos if they exist, from popular image hosts
@@ -216,8 +217,8 @@ def get_hd_media(submission, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
           # Get URL for MP4 version of reddit video
           video_url = submission.media['reddit_video']['fallback_url']
           # Download the file
-          file_path = IMAGE_DIR + '/video.mp4'
-          print('[ OK ] Downloading file at URL ' +
+          file_path = IMAGE_DIR + '/' + submission.id + '.mp4'
+          print('[ OK ] Downloading Reddit video at URL ' +
                 video_url + ' to ' + file_path)
           video = save_file(video_url, file_path)
           return video
@@ -241,13 +242,13 @@ def get_hd_media(submission, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
               # Only the first image in a gallery is used
               imgur_url = images[0].link
               print(images[0])
-          else:  # Single image
-              imgur_url = client.get_image(id).link
-          # If the URL is a GIFV link, download the actual MP4 file
+          else:  # Single image/GIF
+              if client.get_image(id).type == 'image/gif':
+                  # If the image is a GIF, use the MP4 version
+                  imgur_url = client.get_image(id).mp4
+              else:
+                  imgur_url = client.get_image(id).link
           file_extension = os.path.splitext(imgur_url)[-1].lower()
-          if (file_extension == '.gifv'):
-              file_extension = file_extension.replace('.gifv', '.mp4')
-              imgur_url = imgur_url.replace('.gifv', '.mp4')
           # Download the image
           file_path = IMAGE_DIR + '/' + id + file_extension
           print('[ OK ] Downloading Imgur image at URL ' +
