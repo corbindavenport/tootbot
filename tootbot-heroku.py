@@ -139,7 +139,7 @@ def make_post(post_dict):
                         # Log the post anyways
                         log_post(post_id)
                 else:
-                    print('[ OK ] Ignoring', post_id, 'because non-media posts are disabled or there was not a valid media file downloaded')
+                    print('[WARN] Twitter: Ignoring', post_id, 'because non-media posts are disabled or the media file was not found')
             
             # Post on Mastodon
             #TODO: Mastodon support

@@ -146,7 +146,7 @@ def make_post(post_dict):
                         # Log the post anyways
                         log_post(post_id, 'Error while posting tweet: ' + str(e))
                 else:
-                    print('[ OK ] Ignoring', post_id, 'because non-media posts are disabled or there was not a valid media file downloaded')
+                    print('[WARN] Twitter: Ignoring', post_id, 'because non-media posts are disabled or the media file was not found')
             
             # Post on Mastodon
             if MASTODON_INSTANCE_DOMAIN:
@@ -185,7 +185,7 @@ def make_post(post_dict):
                         # Log the post anyways
                         log_post(post_id,'Error while posting toot: ' + str(e))
                 else:
-                    print('[ OK ] Ignoring', post_id, 'because non-media posts are disabled or there was not a valid media file downloaded')
+                    print('[WARN] Mastodon: Ignoring', post_id, 'because non-media posts are disabled or the media file was not found')
             
             # Go to sleep
             print('[ OK ] Sleeping for', DELAY_BETWEEN_TWEETS, 'seconds')
