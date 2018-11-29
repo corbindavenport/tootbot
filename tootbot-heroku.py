@@ -271,7 +271,7 @@ if POST_TO_MASTODON is True:
     try:
         MASTODON_INSTANCE_DOMAIN = os.environ.get('MASTODON_INSTANCE_DOMAIN', None)
         MASTODON_SENSITIVE_MEDIA = os.environ.get('MASTODON_SENSITIVE_MEDIA', None)
-        MASTODON_CLIENT_KEY = os.environ.get('MASTODON_CLIENT_KEY', None)
+        MASTODON_ACCESS_TOKEN = os.environ.get('MASTODON_ACCESS_TOKEN', None)
     except BaseException as e:
         print('[EROR] Error while reading Mastodon Heroku variables:', str(e))
         print('[EROR] Please see the Tootbot wiki for full setup instructions.')
@@ -280,7 +280,7 @@ if POST_TO_MASTODON is True:
     # Make sure authentication is working
     try:
         mastodon = Mastodon(
-            access_token=MASTODON_CLIENT_KEY,
+            access_token=MASTODON_ACCESS_TOKEN,
             api_base_url='https://' + MASTODON_INSTANCE_DOMAIN
         )
         username = mastodon.account_verify_credentials()['username']
