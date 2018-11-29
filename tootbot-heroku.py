@@ -13,6 +13,7 @@ import itertools
 import redis
 from mastodon import Mastodon
 from getmedia import get_media
+from getmedia import get_hd_media
 
 
 def get_reddit_posts(subreddit_info):
