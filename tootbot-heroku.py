@@ -173,11 +173,11 @@ def make_post(post_dict):
                             else:
                                 toot = mastodon.status_post(caption)
                         # Log the toot
-                        log_post(post_id, toot["url"])
+                        log_post(post_id)
                     except BaseException as e:
                         print('[EROR] Error while posting toot:', str(e))
                         # Log the post anyways
-                        log_post(post_id,'Error while posting toot: ' + str(e))
+                        log_post(post_id)
                 else:
                     print('[WARN] Mastodon: Ignoring', post_id, 'because non-media posts are disabled or the media file was not found')
             
