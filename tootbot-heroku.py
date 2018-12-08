@@ -140,7 +140,9 @@ def make_post(post_dict):
                         # Log the post anyways
                         log_post(post_id)
                 else:
-                    print('[WARN] Twitter: Ignoring', post_id, 'because non-media posts are disabled or the media file was not found')
+                    print('[WARN] Twitter: Skipping', post_id, 'because non-media posts are disabled or the media file was not found')
+                    # Log the post anyways
+                    log_post(post_id)
             
             # Post on Mastodon
             if POST_TO_MASTODON:
@@ -179,13 +181,15 @@ def make_post(post_dict):
                         # Log the post anyways
                         log_post(post_id)
                 else:
-                    print('[WARN] Mastodon: Ignoring', post_id, 'because non-media posts are disabled or the media file was not found')
+                    print('[WARN] Mastodon: Skipping', post_id, 'because non-media posts are disabled or the media file was not found')
+                    # Log the post anyways
+                    log_post(post_id)
             
             # Go to sleep
             print('[ OK ] Sleeping for', DELAY_BETWEEN_TWEETS, 'seconds')
             time.sleep(DELAY_BETWEEN_TWEETS)
         else:
-            print('[ OK ] Ignoring', post_id, 'because it was already posted')
+            print('[ OK ] Skipping', post_id, 'because it was already posted')
 
 
 # Check for updates
