@@ -1,6 +1,7 @@
 import os
 import sys
 import configparser
+from gfycat.client import GfycatClient
 from imgurpython import ImgurClient
 from PIL import Image
 import urllib.request
@@ -123,12 +124,13 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
           return
   elif ('gfycat.com' in img_url):  # Gfycat
       gfycat_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
-      # Get the 'zippy' GIF version because Tweepy has a 3MB upload limit
-      # More info: https://www.reddit.com/r/gfycat/comments/3vhl49/did_gfycat_change_its_ui/cxot1ma/
-      gfycat_url = "https://zippy.gfycat.com/" + gfycat_name + ".gif"
+      client = GfycatClient()
+      gfycat_info = client.query_gfy(gfycat_name)
+      # Download the 2MB version because Tweepy has a 3MB upload limit for GIFs
+      gfycat_url = gfycat_info['gfyItem']['max2mbGif']
       file_path = IMAGE_DIR + '/' + gfycat_name + '.gif'
-      # Download the GIF
-      print('[ OK ] Downloading Gfycat at URL ' + gfycat_url + ' to ' + file_path)
+      print('[ OK ] Downloading Gfycat at URL ' +
+            gfycat_url + ' to ' + file_path)
       gfycat_file = save_file(gfycat_url, file_path)
       return gfycat_file
   elif ('giphy.com' in img_url):  # Giphy
@@ -259,12 +261,13 @@ def get_hd_media(submission, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
           return
   elif ('gfycat.com' in media_url):  # Gfycat
       gfycat_name = os.path.basename(urllib.parse.urlsplit(media_url).path)
-      # Get the 'giant' MP4 version
-      # More info: https://www.reddit.com/r/gfycat/comments/3vhl49/did_gfycat_change_its_ui/cxot1ma/
-      gfycat_url = "https://giant.gfycat.com/" + gfycat_name + ".mp4"
+      client = GfycatClient()
+      gfycat_info = client.query_gfy(gfycat_name)
+      # Download the Mp4 version
+      gfycat_url = gfycat_info['gfyItem']['mp4Url']
       file_path = IMAGE_DIR + '/' + gfycat_name + '.mp4'
-      # Download the MP4
-      print('[ OK ] Downloading Gfycat at URL ' + gfycat_url + ' to ' + file_path)
+      print('[ OK ] Downloading Gfycat at URL ' +
+            gfycat_url + ' to ' + file_path)
       gfycat_file = save_file(gfycat_url, file_path)
       return gfycat_file
   elif ('giphy.com' in media_url):  # Giphy
