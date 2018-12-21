@@ -13,6 +13,7 @@ import itertools
 import redis
 from mastodon import Mastodon
 from getmedia import get_media
+from getmedia import get_hd_media
 
 
 def get_reddit_posts(subreddit_info):
@@ -104,8 +105,8 @@ def make_post(post_dict):
             if POST_TO_TWITTER:
                 media_file = get_media(post_dict[post].url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
             # Download Mastodon-compatible version of media file (static image or MP4 file)
-            #if MASTODON_INSTANCE_DOMAIN:
-            #    hd_media_file = get_hd_media(post_dict[post], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
+            if POST_TO_MASTODON:
+                hd_media_file = get_hd_media(post_dict[post], IMGUR_CLIENT, IMGUR_CLIENT_SECRET)
             # Post on Twitter
             if POST_TO_TWITTER:
                 # Make sure the post contains media, if MEDIA_POSTS_ONLY in config is set to True
@@ -139,16 +140,56 @@ def make_post(post_dict):
                         # Log the post anyways
                         log_post(post_id)
                 else:
-                    print('[WARN] Twitter: Ignoring', post_id, 'because non-media posts are disabled or the media file was not found')
+                    print('[WARN] Twitter: Skipping', post_id, 'because non-media posts are disabled or the media file was not found')
+                    # Log the post anyways
+                    log_post(post_id)
             
             # Post on Mastodon
-            #TODO: Mastodon support
+            if POST_TO_MASTODON:
+                # Make sure the post contains media, if MEDIA_POSTS_ONLY in config is set to True
+                if (((MEDIA_POSTS_ONLY is True) and hd_media_file) or (MEDIA_POSTS_ONLY is False)):
+                    try:
+                        # Generate post caption
+                        caption = get_mastodon_caption(post_dict[post])
+                        # Post the toot
+                        if (hd_media_file):
+                            print(
+                                '[ OK ] Posting this on Mastodon with media attachment:', caption)
+                            media = mastodon.media_post(hd_media_file, mime_type=None)
+                            # If the post is marked as NSFW on Reddit, force sensitive media warning for images
+                            if (post_dict[post].over_18 == True):
+                                toot = mastodon.status_post(caption, media_ids=[media], spoiler_text='NSFW')
+                            else:
+                                toot = mastodon.status_post(caption, media_ids=[media], sensitive=MASTODON_SENSITIVE_MEDIA)
+                            # Clean up media file
+                            try:
+                                os.remove(hd_media_file)
+                                print('[ OK ] Deleted media file at', hd_media_file)
+                            except BaseException as e:
+                                print('[EROR] Error while deleting media file:', str(e))
+                        else:
+                            print('[ OK ] Posting this on Mastodon:', caption)
+                            # Add NSFW warning for Reddit posts marked as NSFW
+                            if (post_dict[post].over_18 == True):
+                                toot = mastodon.status_post(caption, spoiler_text='NSFW')
+                            else:
+                                toot = mastodon.status_post(caption)
+                        # Log the toot
+                        log_post(post_id)
+                    except BaseException as e:
+                        print('[EROR] Error while posting toot:', str(e))
+                        # Log the post anyways
+                        log_post(post_id)
+                else:
+                    print('[WARN] Mastodon: Skipping', post_id, 'because non-media posts are disabled or the media file was not found')
+                    # Log the post anyways
+                    log_post(post_id)
             
             # Go to sleep
             print('[ OK ] Sleeping for', DELAY_BETWEEN_TWEETS, 'seconds')
             time.sleep(DELAY_BETWEEN_TWEETS)
         else:
-            print('[ OK ] Ignoring', post_id, 'because it was already posted')
+            print('[ OK ] Skipping', post_id, 'because it was already posted')
 
 
 # Check for updates
@@ -156,7 +197,7 @@ try:
     with urllib.request.urlopen("https://raw.githubusercontent.com/corbindavenport/tootbot/update-check/current-version.txt") as url:
         s = url.read()
         new_version = s.decode("utf-8").rstrip()
-        current_version = 2.4  # Current version of script
+        current_version = 2.5  # Current version of script
         if (current_version < float(new_version)):
             print('[WARN] A new version of Tootbot (' + str(new_version) + ') is available! (you have ' + str(current_version) + ')')
             print('[WARN] Get the latest update from here: https://github.com/corbindavenport/tootbot/releases')
@@ -229,8 +270,30 @@ if POST_TO_TWITTER is True:
 POST_TO_MASTODON = bool(distutils.util.strtobool(
     os.environ.get('POST_TO_MASTODON', None)))
 if POST_TO_MASTODON is True:
-    #TODO: Implement Mastodon support with variables MASTODON_INSTANCE_DOMAIN and MASTODON_SENSITIVE_MEDIA
-    print('[WARN] Mastodon posting is enabled, but Mastodon posting has not yet been implemented in the Heroku version of Tootbot.')
+    print('[ OK ] Attempting to log in to Mastodon...')
+    # Read Mastodon options from environment variables
+    try:
+        MASTODON_INSTANCE_DOMAIN = os.environ.get('MASTODON_INSTANCE_DOMAIN', None)
+        MASTODON_SENSITIVE_MEDIA = os.environ.get('MASTODON_SENSITIVE_MEDIA', None)
+        MASTODON_ACCESS_TOKEN = os.environ.get('MASTODON_ACCESS_TOKEN', None)
+    except BaseException as e:
+        print('[EROR] Error while reading Mastodon Heroku variables:', str(e))
+        print('[EROR] Please see the Tootbot wiki for full setup instructions.')
+        print('[EROR] Tootbot cannot continue, now shutting down')
+        exit()
+    # Make sure authentication is working
+    try:
+        mastodon = Mastodon(
+            access_token=MASTODON_ACCESS_TOKEN,
+            api_base_url='https://' + MASTODON_INSTANCE_DOMAIN
+        )
+        username = mastodon.account_verify_credentials()['username']
+        print('[ OK ] Sucessfully authenticated on ' +
+                MASTODON_INSTANCE_DOMAIN + ' as @' + username)
+    except BaseException as e:
+        print('[EROR] Error while logging into Mastodon:', str(e))
+        print('[EROR] Tootbot cannot continue, now shutting down')
+        exit()
 # Run the main script
 while True:
     subreddit = setup_connection_reddit(SUBREDDIT_TO_MONITOR)

@@ -146,7 +146,9 @@ def make_post(post_dict):
                         # Log the post anyways
                         log_post(post_id, 'Error while posting tweet: ' + str(e))
                 else:
-                    print('[WARN] Twitter: Ignoring', post_id, 'because non-media posts are disabled or the media file was not found')
+                    print('[WARN] Twitter: Skipping', post_id, 'because non-media posts are disabled or the media file was not found')
+                    # Log the post anyways
+                    log_post(post_id, 'Twitter: Skipped because non-media posts are disabled or the media file was not found')
             
             # Post on Mastodon
             if MASTODON_INSTANCE_DOMAIN:
@@ -185,13 +187,15 @@ def make_post(post_dict):
                         # Log the post anyways
                         log_post(post_id,'Error while posting toot: ' + str(e))
                 else:
-                    print('[WARN] Mastodon: Ignoring', post_id, 'because non-media posts are disabled or the media file was not found')
+                    print('[WARN] Mastodon: Skipping', post_id, 'because non-media posts are disabled or the media file was not found')
+                    # Log the post anyways
+                    log_post(post_id, 'Mastodon: Skipped because non-media posts are disabled or the media file was not found')
             
             # Go to sleep
             print('[ OK ] Sleeping for', DELAY_BETWEEN_TWEETS, 'seconds')
             time.sleep(DELAY_BETWEEN_TWEETS)
         else:
-            print('[ OK ] Ignoring', post_id, 'because it was already posted')
+            print('[ OK ] Skipping', post_id, 'because it was already posted')
 
 
 # Check for updates
@@ -199,7 +203,7 @@ try:
     with urllib.request.urlopen("https://raw.githubusercontent.com/corbindavenport/tootbot/update-check/current-version.txt") as url:
         s = url.read()
         new_version = s.decode("utf-8").rstrip()
-        current_version = 2.4  # Current version of script
+        current_version = 2.5  # Current version of script
         if (current_version < float(new_version)):
             print('[WARN] A new version of Tootbot (' + str(new_version) + ') is available! (you have ' + str(current_version) + ')')
             print('[WARN] Get the latest update from here: https://github.com/corbindavenport/tootbot/releases')
@@ -398,7 +402,6 @@ if MASTODON_INSTANCE_DOMAIN:
     else:
         try:
             mastodon = Mastodon(
-                client_id='mastodon.secret',
                 access_token='mastodon.secret',
                 api_base_url='https://' + MASTODON_INSTANCE_DOMAIN
             )
