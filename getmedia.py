@@ -123,9 +123,13 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
               '[EROR] Could not identify Imgur image/gallery ID in this URL:', img_url)
           return
   elif ('gfycat.com' in img_url):  # Gfycat
-      gfycat_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
-      client = GfycatClient()
-      gfycat_info = client.query_gfy(gfycat_name)
+      try:
+        gfycat_name = os.path.basename(urllib.parse.urlsplit(img_url).path)
+        client = GfycatClient()
+        gfycat_info = client.query_gfy(gfycat_name)
+      except BaseException as e:
+        print('[EROR] Error downloading Gfycat link:', str(e))
+        return
       # Download the 2MB version because Tweepy has a 3MB upload limit for GIFs
       gfycat_url = gfycat_info['gfyItem']['max2mbGif']
       file_path = IMAGE_DIR + '/' + gfycat_name + '.gif'
@@ -185,6 +189,7 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
 
 def get_hd_media(submission, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
   media_url = submission.url
+  media_url = "https://gfycat.com/ElectricAdolescentDove"
   # Make sure config file exists
   try:
       config = configparser.ConfigParser()
@@ -260,9 +265,13 @@ def get_hd_media(submission, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
               '[EROR] Could not identify Imgur image/gallery ID in this URL:', media_url)
           return
   elif ('gfycat.com' in media_url):  # Gfycat
-      gfycat_name = os.path.basename(urllib.parse.urlsplit(media_url).path)
-      client = GfycatClient()
-      gfycat_info = client.query_gfy(gfycat_name)
+      try:
+        gfycat_name = os.path.basename(urllib.parse.urlsplit(media_url).path)
+        client = GfycatClient()
+        gfycat_info = client.query_gfy(gfycat_name)
+      except BaseException as e:
+        print('[EROR] Error downloading Gfycat link:', str(e))
+        return
       # Download the Mp4 version
       gfycat_url = gfycat_info['gfyItem']['mp4Url']
       file_path = IMAGE_DIR + '/' + gfycat_name + '.mp4'
