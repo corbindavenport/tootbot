@@ -189,7 +189,6 @@ def get_media(img_url, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
 
 def get_hd_media(submission, IMGUR_CLIENT, IMGUR_CLIENT_SECRET):
   media_url = submission.url
-  media_url = "https://gfycat.com/ElectricAdolescentDove"
   # Make sure config file exists
   try:
       config = configparser.ConfigParser()
