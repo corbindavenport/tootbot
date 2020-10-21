@@ -1,8 +1,6 @@
 # Tootbot
 
-**I am no longer actively developing Tootbot, and no bug fixes or new features will be implemented. There is one fork developed by Mark Burgunder [here](https://gitlab.com/marvin8/tootbot), with fixes to Gfycat integration and a few other changes.**
-
-**If you want to take over this project, [send me an email](https://corbin.io/contact.html).**
+**I am no longer actively developing Tootbot, and no bug fixes or new features will be implemented. There a fork developed by Mark Burgunder [here](https://gitlab.com/marvin8/tootbot), with fixes to Gfycat integration and and other changes.**
 
 This is a Python bot that looks up posts from specified subreddits and automatically posts them on Twitter and/or [Mastodon](https://joinmastodon.org/). It is based on [reddit-twitter-bot](https://github.com/rhiever/reddit-twitter-bot). Tootbot is now used by [a wide variety of social media accounts](https://github.com/corbindavenport/tootbot/wiki/Accounts-using-Tootbot).
 
